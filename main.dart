@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -26,11 +28,289 @@ class MyApp extends StatelessWidget {
           focusedBorder: UnderlineInputBorder(
             borderSide: BorderSide(color: Colors.black),
           ),
-          labelStyle:
-              TextStyle(color: Colors.black), // Estilo do rótulo quando em foco
+          labelStyle: TextStyle(color: Colors.black),
         ),
       ),
-      home: MainPage(),
+      home: LoginPage(),
+    );
+  }
+}
+
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _passwordVisible = false;
+
+  void _login(BuildContext context) async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MainPage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      _showErrorDialog(context, e.message!);
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Erro'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Login', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF50909a),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: 'E-mail',
+                labelStyle: TextStyle(color: Colors.black),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+              ),
+              cursorColor: Colors.black,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: _passwordController,
+              obscureText: !_passwordVisible,
+              decoration: InputDecoration(
+                labelText: 'Senha',
+                labelStyle: TextStyle(color: Colors.black),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.black,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _passwordVisible = !_passwordVisible;
+                    });
+                  },
+                ),
+              ),
+              cursorColor: Colors.black,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                _login(context);
+              },
+              child: Text('Login', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF50909a),
+                padding: EdgeInsets.symmetric(vertical: 15.0),
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RegisterPage()),
+                );
+              },
+              child: Text('Cadastro', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF50909a),
+                padding: EdgeInsets.symmetric(vertical: 15.0),
+              ),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: Color(0xFFe6e6e6),
+    );
+  }
+}
+
+class RegisterPage extends StatefulWidget {
+  @override
+  _RegisterPageState createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
+
+  void _register(BuildContext context) async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showErrorDialog(context, 'As senhas não coincidem.');
+      return;
+    }
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      _showErrorDialog(context, e.message!);
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Erro'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Cadastro', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF50909a),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: 'E-mail',
+                labelStyle: TextStyle(color: Colors.black),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+              ),
+              cursorColor: Colors.black,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: _passwordController,
+              obscureText: !_passwordVisible,
+              decoration: InputDecoration(
+                labelText: 'Senha',
+                labelStyle: TextStyle(color: Colors.black),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.black,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _passwordVisible = !_passwordVisible;
+                    });
+                  },
+                ),
+              ),
+              cursorColor: Colors.black,
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: _confirmPasswordController,
+              obscureText: !_confirmPasswordVisible,
+              decoration: InputDecoration(
+                labelText: 'Confirmar Senha',
+                labelStyle: TextStyle(color: Colors.black),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _confirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.black,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _confirmPasswordVisible = !_confirmPasswordVisible;
+                    });
+                  },
+                ),
+              ),
+              cursorColor: Colors.black,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                _register(context);
+              },
+              child: Text('Registrar', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF50909a),
+                padding: EdgeInsets.symmetric(vertical: 15.0),
+              ),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: Color(0xFFe6e6e6),
     );
   }
 }
@@ -104,6 +384,52 @@ class HabitList extends StatefulWidget {
 class HabitListState extends State<HabitList> {
   final List<Habit> _habits = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadHabits();
+  }
+
+  Future<void> _loadHabits() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('habits')
+            .where('userId', isEqualTo: user.uid)
+            .get();
+
+        final habits = querySnapshot.docs.map((doc) {
+          return Habit.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        }).toList();
+
+        setState(() {
+          _habits.addAll(habits);
+        });
+      }
+    } catch (e) {
+      print('Error loading habits: $e');
+    }
+  }
+
+  Future<void> _saveHabit(Habit habit) async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentReference docRef = await FirebaseFirestore.instance
+            .collection('habits')
+            .add(habit.toMap(user.uid));
+        habit.id = docRef.id;
+        setState(() {
+          _habits.add(habit);
+          _habits.sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
+        });
+      }
+    } catch (e) {
+      print('Error saving habit: $e');
+    }
+  }
+
   void _toggleCompleted(int index) {
     setState(() {
       _habits[index].isCompleted = !_habits[index].isCompleted;
@@ -111,10 +437,7 @@ class HabitListState extends State<HabitList> {
   }
 
   void _addHabit(Habit habit) {
-    setState(() {
-      _habits.add(habit);
-      _habits.sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
-    });
+    _saveHabit(habit);
   }
 
   void _editHabit(int index, Habit editedHabit) {
@@ -140,9 +463,11 @@ class HabitListState extends State<HabitList> {
           TextButton(
             onPressed: () {
               setState(() {
+                FirebaseFirestore.instance
+                    .collection('habits')
+                    .doc(_habits[index].id)
+                    .delete();
                 _habits.removeAt(index);
-                _habits
-                    .sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
               });
               Navigator.of(ctx).pop();
             },
@@ -1098,6 +1423,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
 }
 
 class Habit {
+  String id;
   final String title;
   final String description;
   final TimeOfDay reminderTime;
@@ -1110,6 +1436,7 @@ class Habit {
   bool isCompleted;
 
   Habit({
+    this.id = '',
     required this.title,
     required this.description,
     required this.reminderTime,
@@ -1121,6 +1448,41 @@ class Habit {
     required this.nextReminder,
     this.isCompleted = false,
   });
+
+  Map<String, dynamic> toMap(String userId) {
+    return {
+      'userId': userId,
+      'title': title,
+      'description': description,
+      'reminderTime': {'hour': reminderTime.hour, 'minute': reminderTime.minute},
+      'reminderFrequency': reminderFrequency,
+      'color': color.value,
+      'weekDays': weekDays,
+      'weekendDays': weekendDays,
+      'monthDays': monthDays,
+      'nextReminder': nextReminder.toIso8601String(),
+      'isCompleted': isCompleted,
+    };
+  }
+
+  static Habit fromMap(Map<String, dynamic> map, String id) {
+    return Habit(
+      id: id,
+      title: map['title'],
+      description: map['description'],
+      reminderTime: TimeOfDay(
+        hour: map['reminderTime']['hour'],
+        minute: map['reminderTime']['minute'],
+      ),
+      reminderFrequency: map['reminderFrequency'],
+      color: Color(map['color']),
+      weekDays: List<bool>.from(map['weekDays']),
+      weekendDays: List<bool>.from(map['weekendDays']),
+      monthDays: List<bool>.from(map['monthDays']),
+      nextReminder: DateTime.parse(map['nextReminder']),
+      isCompleted: map['isCompleted'],
+    );
+  }
 }
 
 class TodayHabits extends StatelessWidget {
