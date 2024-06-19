@@ -23,7 +23,60 @@ class MyApp extends StatelessWidget {
           labelStyle: TextStyle(color: Colors.black), // Estilo do rótulo quando em foco
         ),
       ),
-      home: HabitList(),
+      home: MainPage(),
+    );
+  }
+}
+
+class MainPage extends StatefulWidget {
+  @override
+  _MainPageState createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  int _selectedIndex = 0;
+
+  static List<Widget> _widgetOptions = <Widget>[
+    HabitList(),
+    TodayHabits(),
+    HabitStatistics(),
+    ProfilePage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _widgetOptions.elementAt(_selectedIndex),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.edit),
+            label: 'Hoje',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Estatísticas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Color(0xff4f138a),
+        unselectedItemColor: Color(0xff9a5ad5),
+        onTap: _onItemTapped,
+      ),
     );
   }
 }
@@ -84,12 +137,19 @@ class _HabitListState extends State<HabitList> {
     );
   }
 
+  List<Habit> get _dailyHabits =>
+      _habits.where((habit) => habit.reminderFrequency == 'Diariamente').toList();
+  List<Habit> get _weeklyHabits =>
+      _habits.where((habit) => habit.reminderFrequency == 'Semanalmente').toList();
+  List<Habit> get _monthlyHabits =>
+      _habits.where((habit) => habit.reminderFrequency == 'Mensalmente').toList();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Monitoramento de Hábitos', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xff9a5ad5),
         centerTitle: true,
       ),
       body: _habits.isEmpty
@@ -100,27 +160,36 @@ class _HabitListState extends State<HabitList> {
                 textAlign: TextAlign.center,
               ),
             )
-          : ListView.builder(
-              itemCount: _habits.length,
-              padding: EdgeInsets.only(bottom: 80.0), // Adiciona espaçamento inferior para rolagem extra
-              itemBuilder: (context, index) {
-                return HabitTile(
-                  habit: _habits[index],
-                  onToggleCompleted: () => _toggleCompleted(index),
-                  onEdit: () async {
-                    final editedHabit = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditHabitScreen(habit: _habits[index]),
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    children: [
+                      HabitCategory(
+                        title: 'Diários',
+                        habits: _dailyHabits,
+                        toggleCompleted: _toggleCompleted,
+                        editHabit: _editHabit,
+                        deleteHabit: _deleteHabit,
                       ),
-                    );
-                    if (editedHabit != null && editedHabit is Habit) {
-                      _editHabit(index, editedHabit);
-                    }
-                  },
-                  onDelete: () => _deleteHabit(index),
-                );
-              },
+                      HabitCategory(
+                        title: 'Semanais',
+                        habits: _weeklyHabits,
+                        toggleCompleted: _toggleCompleted,
+                        editHabit: _editHabit,
+                        deleteHabit: _deleteHabit,
+                      ),
+                      HabitCategory(
+                        title: 'Mensais',
+                        habits: _monthlyHabits,
+                        toggleCompleted: _toggleCompleted,
+                        editHabit: _editHabit,
+                        deleteHabit: _deleteHabit,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -133,9 +202,53 @@ class _HabitListState extends State<HabitList> {
           }
         },
         child: Icon(Icons.add, color: Colors.white),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xff9a5ad5),
       ),
-      backgroundColor: Color(0xFFe6e6e6),
+    );
+  }
+}
+
+class HabitCategory extends StatelessWidget {
+  final String title;
+  final List<Habit> habits;
+  final Function(int) toggleCompleted;
+  final Function(int, Habit) editHabit;
+  final Function(int) deleteHabit;
+
+  HabitCategory({
+    required this.title,
+    required this.habits,
+    required this.toggleCompleted,
+    required this.editHabit,
+    required this.deleteHabit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      title: Text(title),
+      children: habits
+          .asMap()
+          .entries
+          .map(
+            (entry) => HabitTile(
+              habit: entry.value,
+              onToggleCompleted: () => toggleCompleted(entry.key),
+              onEdit: () async {
+                final editedHabit = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditHabitScreen(habit: entry.value),
+                  ),
+                );
+                if (editedHabit != null && editedHabit is Habit) {
+                  editHabit(entry.key, editedHabit);
+                }
+              },
+              onDelete: () => deleteHabit(entry.key),
+            ),
+          )
+          .toList(),
     );
   }
 }
@@ -270,7 +383,7 @@ class AddHabitScreen extends StatefulWidget {
 class _AddHabitScreenState extends State<AddHabitScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  String? _reminderFrequency = 'Semanalmente';
+  String? _reminderFrequency = 'Diariamente';
   TimeOfDay? _reminderTime;
   Color? _selectedColor = Colors.white;
   List<bool> _weekDaysSelected = List.generate(5, (_) => false);
@@ -294,12 +407,15 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     return _nameController.text.isNotEmpty &&
            _reminderTime != null &&
            _reminderFrequency != null &&
-           (_reminderFrequency == 'Semanalmente' ? _weekDaysSelected.contains(true) || _weekendSelected.contains(true) : _monthDaysSelected.contains(true));
+           (_reminderFrequency == 'Diariamente' ||
+           (_reminderFrequency == 'Semanalmente' ? _weekDaysSelected.contains(true) || _weekendSelected.contains(true) : _monthDaysSelected.contains(true)));
   }
 
   DateTime _calculateNextReminder() {
     final now = DateTime.now();
-    if (_reminderFrequency == 'Semanalmente') {
+    if (_reminderFrequency == 'Diariamente') {
+      return DateTime(now.year, now.month, now.day, _reminderTime!.hour, _reminderTime!.minute).add(Duration(days: 1));
+    } else if (_reminderFrequency == 'Semanalmente') {
       for (int i = 0; i < 7; i++) {
         final day = now.add(Duration(days: i));
         if ((day.weekday <= 5 && _weekDaysSelected[day.weekday - 1]) || (day.weekday > 5 && _weekendSelected[day.weekday - 6])) {
@@ -323,7 +439,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Adicionar Hábito', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xff9a5ad5),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
@@ -401,7 +517,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   _reminderFrequency = newValue;
                 });
               },
-              items: <String>['Semanalmente', 'Mensalmente']
+              items: <String>['Diariamente', 'Semanalmente', 'Mensalmente']
                   .map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
@@ -501,7 +617,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     },
                     child: Text('Cancelar', style: TextStyle(color: Color(0xFFFF6961))),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFe6e6e6),
+                      backgroundColor: Colors.white,
                       foregroundColor: Color(0xFFFF6961),
                       side: BorderSide(color: Color(0xFFFF6961), width: 2),
                       shape: RoundedRectangleBorder(
@@ -561,7 +677,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           ],
         ),
       ),
-      backgroundColor: Color(0xFFe6e6e6),
+      backgroundColor: Colors.white,
     );
   }
 }
@@ -616,12 +732,15 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
     return _nameController.text.isNotEmpty &&
            _reminderTime != null &&
            _reminderFrequency != null &&
-           (_reminderFrequency == 'Semanalmente' ? _weekDaysSelected.contains(true) || _weekendSelected.contains(true) : _monthDaysSelected.contains(true));
+           (_reminderFrequency == 'Diariamente' ||
+           (_reminderFrequency == 'Semanalmente' ? _weekDaysSelected.contains(true) || _weekendSelected.contains(true) : _monthDaysSelected.contains(true)));
   }
 
   DateTime _calculateNextReminder() {
     final now = DateTime.now();
-    if (_reminderFrequency == 'Semanalmente') {
+    if (_reminderFrequency == 'Diariamente') {
+      return DateTime(now.year, now.month, now.day, _reminderTime!.hour, _reminderTime!.minute).add(Duration(days: 1));
+    } else if (_reminderFrequency == 'Semanalmente') {
       for (int i = 0; i < 7; i++) {
         final day = now.add(Duration(days: i));
         if ((day.weekday <= 5 && _weekDaysSelected[day.weekday - 1]) || (day.weekday > 5 && _weekendSelected[day.weekday - 6])) {
@@ -645,7 +764,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Editar Hábito', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xff9a5ad5),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
@@ -723,7 +842,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                   _reminderFrequency = newValue;
                 });
               },
-              items: <String>['Semanalmente', 'Mensalmente']
+              items: <String>['Diariamente', 'Semanalmente', 'Mensalmente']
                   .map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
@@ -823,7 +942,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     },
                     child: Text('Cancelar', style: TextStyle(color: Color(0xFFFF6961))),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFe6e6e6),
+                      backgroundColor: Colors.white,
                       foregroundColor: Color(0xFFFF6961),
                       side: BorderSide(color: Color(0xFFFF6961), width: 2),
                       shape: RoundedRectangleBorder(
@@ -883,7 +1002,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
           ],
         ),
       ),
-      backgroundColor: Color(0xFFe6e6e6),
+      backgroundColor: Colors.white,
     );
   }
 }
@@ -912,4 +1031,65 @@ class Habit {
     required this.nextReminder,
     this.isCompleted = false,
   });
+}
+
+class TodayHabits extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Hábitos de Hoje', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+        backgroundColor: Color(0xff9a5ad5),
+        
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Text(
+          'Aqui serão exibidos os hábitos que você deve cumprir hoje.',
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+class HabitStatistics extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Estatísticas', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+        backgroundColor: Color(0xff9a5ad5),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Text(
+          'Aqui serão exibidas as estatísticas dos seus hábitos.',
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Perfil', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+        backgroundColor: Color(0xff9a5ad5),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Text(
+          'Aqui serão exibidas as informações do seu perfil.',
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
 }
