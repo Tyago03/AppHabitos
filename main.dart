@@ -566,7 +566,7 @@ class HabitListState extends State<HabitList> {
                   .map(
                     (entry) => HabitTile(
                       habit: entry.value,
-                      onToggleCompleted: () => _toggleCompleted(entry.key),
+                      onToggleCompleted: () => _toggleCompleted(_habits.indexOf(entry.value)),
                       onEdit: () async {
                         final editedHabit = await Navigator.push(
                           context,
@@ -576,10 +576,10 @@ class HabitListState extends State<HabitList> {
                           ),
                         );
                         if (editedHabit != null && editedHabit is Habit) {
-                          _editHabit(entry.key, editedHabit);
+                          _editHabit(_habits.indexOf(entry.value), editedHabit);
                         }
                       },
-                      onDelete: () => _deleteHabit(entry.key),
+                      onDelete: () => _deleteHabit(_habits.indexOf(entry.value)),
                     ),
                   )
                   .toList(),
@@ -1539,13 +1539,13 @@ class _TodayHabitsState extends State<TodayHabits> {
     });
   }
 
-  List<Habit> get _dailyHabits => _habits
+  List<Habit> get _dailyHabits => _todayHabits
       .where((habit) => habit.reminderFrequency == 'Diariamente')
       .toList();
-  List<Habit> get _weeklyHabits => _habits
+  List<Habit> get _weeklyHabits => _todayHabits
       .where((habit) => habit.reminderFrequency == 'Semanalmente')
       .toList();
-  List<Habit> get _monthlyHabits => _habits
+  List<Habit> get _monthlyHabits => _todayHabits
       .where((habit) => habit.reminderFrequency == 'Mensalmente')
       .toList();
 
@@ -1564,16 +1564,18 @@ class _TodayHabitsState extends State<TodayHabits> {
     }).toList();
   }
 
-  void _toggleCompleted(int index) async {
-    final habit = _habits[index];
-    habit.isCompleted = !habit.isCompleted;
-    await FirebaseFirestore.instance
-        .collection('habits')
-        .doc(habit.id)
-        .update({'isCompleted': habit.isCompleted});
-    setState(() {
-      _habits[index] = habit;
-    });
+  void _toggleCompleted(Habit habit) async {
+    final index = _habits.indexOf(habit);
+    if (index != -1) {
+      setState(() {
+        _habits[index].isCompleted = !_habits[index].isCompleted;
+      });
+
+      await FirebaseFirestore.instance
+          .collection('habits')
+          .doc(habit.id)
+          .update({'isCompleted': _habits[index].isCompleted});
+    }
   }
 
   @override
@@ -1646,12 +1648,10 @@ class _TodayHabitsState extends State<TodayHabits> {
             ),
             Column(
               children: pendingHabits
-                  .asMap()
-                  .entries
                   .map(
-                    (entry) => HabitTile(
-                      habit: entry.value,
-                      onToggleCompleted: () => _toggleCompleted(entry.key),
+                    (habit) => HabitTile(
+                      habit: habit,
+                      onToggleCompleted: () => _toggleCompleted(habit),
                       onEdit: () {},
                       onDelete: () {},
                     ),
@@ -1668,12 +1668,10 @@ class _TodayHabitsState extends State<TodayHabits> {
                   ),
                   Column(
                     children: completedHabits
-                        .asMap()
-                        .entries
                         .map(
-                          (entry) => HabitTile(
-                            habit: entry.value,
-                            onToggleCompleted: () => _toggleCompleted(entry.key),
+                          (habit) => HabitTile(
+                            habit: habit,
+                            onToggleCompleted: () => _toggleCompleted(habit),
                             onEdit: () {},
                             onDelete: () {},
                           ),
@@ -1688,6 +1686,7 @@ class _TodayHabitsState extends State<TodayHabits> {
     );
   }
 }
+
 
 class HabitCategory extends StatelessWidget {
   final String title;
