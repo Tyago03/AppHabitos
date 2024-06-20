@@ -9,6 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'firebase_options.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:permission_handler/permission_handler.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -36,8 +37,19 @@ void main() async {
       // Handle your notification response here
     },
   );
+
+  await _checkAndRequestExactAlarmPermission(); // Verifica e solicita a permissão para alarmes exatos
 }
 
+Future<void> _checkAndRequestExactAlarmPermission() async {
+  if (await Permission.systemAlertWindow.isDenied) {
+    await openAppSettings();
+  }
+
+  if (await Permission.scheduleExactAlarm.isDenied) {
+    await Permission.scheduleExactAlarm.request();
+  }
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -253,8 +265,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.black,
-                  ),
+                    color: Colors.black),
                   onPressed: _togglePasswordVisibility,
                 ),
               ),
@@ -406,18 +417,22 @@ class HabitListState extends State<HabitList> {
   }
 
   Future<void> _editHabit(int index, Habit editedHabit) async {
-    String userId = FirebaseAuth.instance.currentUser!.uid;
-    await FirebaseFirestore.instance
-        .collection('habits')
-        .doc(editedHabit.id)
-        .update(editedHabit.toMap(userId));
+    if (editedHabit.id != null) {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+      await FirebaseFirestore.instance
+          .collection('habits')
+          .doc(editedHabit.id)
+          .update(editedHabit.toMap(userId));
 
-    setState(() {
-      _habits[index] = editedHabit;
-      _habits.sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
-    });
+      setState(() {
+        _habits[index] = editedHabit;
+        _habits.sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
+      });
 
-    _scheduleNotification(editedHabit);
+      _scheduleNotification(editedHabit);
+    } else {
+      print('Habit ID is null');
+    }
   }
 
   Future<void> _deleteHabit(int index) async {
@@ -585,6 +600,7 @@ class HabitListState extends State<HabitList> {
   }
 }
 
+
 class Item {
   Item({
     required this.headerValue,
@@ -606,8 +622,6 @@ List<Item> generateItems(int numberOfItems) {
     );
   });
 }
-
-
 
 class HabitCategory extends StatelessWidget {
   final String title;
@@ -1119,6 +1133,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   }
 }
 
+
 class EditHabitScreen extends StatefulWidget {
   final Habit habit;
 
@@ -1424,6 +1439,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                     onPressed: () {
                       if (_isFormValid()) {
                         final editedHabit = Habit(
+                          id: widget.habit.id, // Certifique-se de manter o ID
                           title: _nameController.text,
                           description: _descriptionController.text,
                           reminderTime: _reminderTime!,
@@ -1474,6 +1490,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
     );
   }
 }
+
 
 class Habit {
   String? id;
@@ -1574,7 +1591,6 @@ class TodayHabits extends StatelessWidget {
     );
   }
 }
-
 
 class HabitStatistics extends StatelessWidget {
   @override
