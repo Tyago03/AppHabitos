@@ -45,10 +45,6 @@ Future<void> _checkAndRequestExactAlarmPermission() async {
   if (await Permission.systemAlertWindow.isDenied) {
     await openAppSettings();
   }
-
-  if (await Permission.scheduleExactAlarm.isDenied) {
-    await Permission.scheduleExactAlarm.request();
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -242,8 +238,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.black,
-                  ),
+                    color: Colors.black),
                   onPressed: _togglePasswordVisibility,
                 ),
               ),
@@ -264,8 +259,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                      _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.black),
+                    _obscureText ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.black),
                   onPressed: _togglePasswordVisibility,
                 ),
               ),
@@ -395,9 +390,15 @@ class HabitListState extends State<HabitList> {
     });
   }
 
-  void _toggleCompleted(int index) {
+  void _toggleCompleted(int index) async {
+    final habit = _habits[index];
+    habit.isCompleted = !habit.isCompleted;
+    await FirebaseFirestore.instance
+        .collection('habits')
+        .doc(habit.id)
+        .update({'isCompleted': habit.isCompleted});
     setState(() {
-      _habits[index].isCompleted = !_habits[index].isCompleted;
+      _habits[index] = habit;
     });
   }
 
@@ -501,13 +502,10 @@ class HabitListState extends State<HabitList> {
               ),
             )
           : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 80.0), // Adiciona espaço inferior
-                child: Column(
-                  children: _data.map<Widget>((Item item) {
-                    return _buildHabitCategory(item);
-                  }).toList(),
-                ),
+              child: Column(
+                children: _data.map<Widget>((Item item) {
+                  return _buildExpansionPanel(item);
+                }).toList(),
               ),
             ),
       floatingActionButton: FloatingActionButton(
@@ -527,7 +525,7 @@ class HabitListState extends State<HabitList> {
     );
   }
 
-  Widget _buildHabitCategory(Item item) {
+  Widget _buildExpansionPanel(Item item) {
     final habitsList = item.headerValue == 'Diários'
         ? _dailyHabits
         : item.headerValue == 'Semanais'
@@ -539,7 +537,7 @@ class HabitListState extends State<HabitList> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(15), // Borda arredondada
+          borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
               color: Colors.black12,
@@ -593,16 +591,12 @@ class HabitListState extends State<HabitList> {
   }
 }
 
-
-
 class Item {
   Item({
     required this.headerValue,
-    this.isExpanded = true,
   });
 
   String headerValue;
-  bool isExpanded;
 }
 
 List<Item> generateItems(int numberOfItems) {
@@ -615,51 +609,6 @@ List<Item> generateItems(int numberOfItems) {
               : 'Mensais',
     );
   });
-}
-
-class HabitCategory extends StatelessWidget {
-  final String title;
-  final List<Habit> habits;
-  final Function(int) toggleCompleted;
-  final Function(int, Habit) editHabit;
-  final Function(int) deleteHabit;
-
-  HabitCategory({
-    required this.title,
-    required this.habits,
-    required this.toggleCompleted,
-    required this.editHabit,
-    required this.deleteHabit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ExpansionTile(
-      title: Text(title),
-      children: habits
-          .asMap()
-          .entries
-          .map(
-            (entry) => HabitTile(
-              habit: entry.value,
-              onToggleCompleted: () => toggleCompleted(entry.key),
-              onEdit: () async {
-                final editedHabit = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditHabitScreen(habit: entry.value),
-                  ),
-                );
-                if (editedHabit != null && editedHabit is Habit) {
-                  editHabit(entry.key, editedHabit);
-                }
-              },
-              onDelete: () => deleteHabit(entry.key),
-            ),
-          )
-          .toList(),
-    );
-  }
 }
 
 class HabitTile extends StatefulWidget {
@@ -761,7 +710,9 @@ class _HabitTileState extends State<HabitTile> {
                     color: Colors.black,
                     size: 28,
                   ),
-                  onPressed: widget.onToggleCompleted,
+                  onPressed: () {
+                    widget.onToggleCompleted();
+                  },
                 ),
               ],
             ),
@@ -772,8 +723,7 @@ class _HabitTileState extends State<HabitTile> {
                   TextButton.icon(
                     onPressed: widget.onEdit,
                     icon: Icon(Icons.more_horiz, color: Colors.black),
-                    label:
-                        Text('Editar', style: TextStyle(color: Colors.black)),
+                    label: Text('Editar', style: TextStyle(color: Colors.black)),
                   ),
                   TextButton.icon(
                     onPressed: widget.onDelete,
@@ -1532,8 +1482,7 @@ class Habit {
       id: id,
       title: map['title'],
       description: map['description'],
-      reminderTime: _parseTimeOfDay(
-          map['reminderTime']), // Converte de string para TimeOfDay
+      reminderTime: _parseTimeOfDay(map['reminderTime']), // Converte de string para TimeOfDay
       reminderFrequency: map['reminderFrequency'],
       color: Color(map['color']),
       weekDays: List<bool>.from(map['weekDays']),
@@ -1560,7 +1509,73 @@ extension TimeOfDayExtension on TimeOfDay {
   }
 }
 
-class TodayHabits extends StatelessWidget {
+class TodayHabits extends StatefulWidget {
+  @override
+  _TodayHabitsState createState() => _TodayHabitsState();
+}
+
+class _TodayHabitsState extends State<TodayHabits> {
+  final List<Habit> _habits = [];
+  final List<Item> _data = generateItems(3); // Inicializa as seções como abertas
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHabits();
+  }
+
+  Future<void> _fetchHabits() async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('habits')
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    setState(() {
+      _habits.addAll(snapshot.docs.map((doc) {
+        var data = doc.data() as Map<String, dynamic>;
+        return Habit.fromMap(data, doc.id);
+      }).toList());
+    });
+  }
+
+  List<Habit> get _dailyHabits => _habits
+      .where((habit) => habit.reminderFrequency == 'Diariamente')
+      .toList();
+  List<Habit> get _weeklyHabits => _habits
+      .where((habit) => habit.reminderFrequency == 'Semanalmente')
+      .toList();
+  List<Habit> get _monthlyHabits => _habits
+      .where((habit) => habit.reminderFrequency == 'Mensalmente')
+      .toList();
+
+  List<Habit> get _todayHabits {
+    final now = DateTime.now();
+    return _habits.where((habit) {
+      if (habit.reminderFrequency == 'Diariamente') {
+        return true;
+      } else if (habit.reminderFrequency == 'Semanalmente') {
+        return (now.weekday <= 5 && habit.weekDays[now.weekday - 1]) ||
+            (now.weekday > 5 && habit.weekendDays[now.weekday - 6]);
+      } else if (habit.reminderFrequency == 'Mensalmente') {
+        return habit.monthDays[now.day - 1];
+      }
+      return false;
+    }).toList();
+  }
+
+  void _toggleCompleted(int index) async {
+    final habit = _habits[index];
+    habit.isCompleted = !habit.isCompleted;
+    await FirebaseFirestore.instance
+        .collection('habits')
+        .doc(habit.id)
+        .update({'isCompleted': habit.isCompleted});
+    setState(() {
+      _habits[index] = habit;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1573,14 +1588,148 @@ class TodayHabits extends StatelessWidget {
         backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
-      body: Center(
-        child: Text(
-          'Aqui serão exibidos os hábitos que você deve cumprir hoje.',
-          style: TextStyle(fontSize: 18, color: Colors.grey),
-          textAlign: TextAlign.center,
+      body: _todayHabits.isEmpty
+          ? Center(
+              child: Text(
+                'Você não tem hábitos para hoje.',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                children: _data.map<Widget>((Item item) {
+                  return _buildExpansionPanel(item);
+                }).toList(),
+              ),
+            ),
+      backgroundColor: Color(0xFFe6e6e6),
+    );
+  }
+
+  Widget _buildExpansionPanel(Item item) {
+    final habitsList = item.headerValue == 'Diários'
+        ? _dailyHabits
+        : item.headerValue == 'Semanais'
+            ? _weeklyHabits
+            : _monthlyHabits;
+
+    final completedHabits = habitsList.where((habit) => habit.isCompleted).toList();
+    final pendingHabits = habitsList.where((habit) => !habit.isCompleted).toList();
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 5,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            ListTile(
+              title: Text(
+                item.headerValue,
+                style: GoogleFonts.indieFlower(
+                  textStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ),
+            Column(
+              children: pendingHabits
+                  .asMap()
+                  .entries
+                  .map(
+                    (entry) => HabitTile(
+                      habit: entry.value,
+                      onToggleCompleted: () => _toggleCompleted(entry.key),
+                      onEdit: () {},
+                      onDelete: () {},
+                    ),
+                  )
+                  .toList(),
+            ),
+            if (completedHabits.isNotEmpty)
+              Column(
+                children: [
+                  Divider(),
+                  Text(
+                    'Concluídos',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  Column(
+                    children: completedHabits
+                        .asMap()
+                        .entries
+                        .map(
+                          (entry) => HabitTile(
+                            habit: entry.value,
+                            onToggleCompleted: () => _toggleCompleted(entry.key),
+                            onEdit: () {},
+                            onDelete: () {},
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
+          ],
         ),
       ),
-      backgroundColor: Color(0xFFe6e6e6),
+    );
+  }
+}
+
+class HabitCategory extends StatelessWidget {
+  final String title;
+  final List<Habit> habits;
+  final Function(int) toggleCompleted;
+  final Function(int, Habit) editHabit;
+  final Function(int) deleteHabit;
+
+  HabitCategory({
+    required this.title,
+    required this.habits,
+    required this.toggleCompleted,
+    required this.editHabit,
+    required this.deleteHabit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      title: Text(title),
+      children: habits
+          .asMap()
+          .entries
+          .map(
+            (entry) => HabitTile(
+              habit: entry.value,
+              onToggleCompleted: () => toggleCompleted(entry.key),
+              onEdit: () async {
+                final editedHabit = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditHabitScreen(habit: entry.value),
+                  ),
+                );
+                if (editedHabit != null && editedHabit is Habit) {
+                  editHabit(entry.key, editedHabit);
+                }
+              },
+              onDelete: () => deleteHabit(entry.key),
+            ),
+          )
+          .toList(),
     );
   }
 }
