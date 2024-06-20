@@ -264,8 +264,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.black),
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.black),
                   onPressed: _togglePasswordVisibility,
                 ),
               ),
@@ -501,10 +501,13 @@ class HabitListState extends State<HabitList> {
               ),
             )
           : SingleChildScrollView(
-              child: Column(
-                children: _data.map<Widget>((Item item) {
-                  return _buildExpansionPanel(item);
-                }).toList(),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 80.0), // Adiciona espaço inferior
+                child: Column(
+                  children: _data.map<Widget>((Item item) {
+                    return _buildHabitCategory(item);
+                  }).toList(),
+                ),
               ),
             ),
       floatingActionButton: FloatingActionButton(
@@ -524,7 +527,7 @@ class HabitListState extends State<HabitList> {
     );
   }
 
-  Widget _buildExpansionPanel(Item item) {
+  Widget _buildHabitCategory(Item item) {
     final habitsList = item.headerValue == 'Diários'
         ? _dailyHabits
         : item.headerValue == 'Semanais'
@@ -536,7 +539,7 @@ class HabitListState extends State<HabitList> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(15), // Borda arredondada
           boxShadow: [
             BoxShadow(
               color: Colors.black12,
@@ -545,53 +548,43 @@ class HabitListState extends State<HabitList> {
             ),
           ],
         ),
-        child: ExpansionPanelList(
-          expansionCallback: (int index, bool isExpanded) {
-            setState(() {
-              item.isExpanded = !isExpanded;
-            });
-          },
+        child: Column(
           children: [
-            ExpansionPanel(
-              headerBuilder: (BuildContext context, bool isExpanded) {
-                return ListTile(
-                  title: Text(
-                    item.headerValue,
-                    style: GoogleFonts.indieFlower(
-                      textStyle: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
+            ListTile(
+              title: Text(
+                item.headerValue,
+                style: GoogleFonts.indieFlower(
+                  textStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
-                );
-              },
-              body: Column(
-                children: habitsList
-                    .asMap()
-                    .entries
-                    .map(
-                      (entry) => HabitTile(
-                        habit: entry.value,
-                        onToggleCompleted: () => _toggleCompleted(entry.key),
-                        onEdit: () async {
-                          final editedHabit = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  EditHabitScreen(habit: entry.value),
-                            ),
-                          );
-                          if (editedHabit != null && editedHabit is Habit) {
-                            _editHabit(entry.key, editedHabit);
-                          }
-                        },
-                        onDelete: () => _deleteHabit(entry.key),
-                      ),
-                    )
-                    .toList(),
+                ),
               ),
-              isExpanded: item.isExpanded,
+            ),
+            Column(
+              children: habitsList
+                  .asMap()
+                  .entries
+                  .map(
+                    (entry) => HabitTile(
+                      habit: entry.value,
+                      onToggleCompleted: () => _toggleCompleted(entry.key),
+                      onEdit: () async {
+                        final editedHabit = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                EditHabitScreen(habit: entry.value),
+                          ),
+                        );
+                        if (editedHabit != null && editedHabit is Habit) {
+                          _editHabit(entry.key, editedHabit);
+                        }
+                      },
+                      onDelete: () => _deleteHabit(entry.key),
+                    ),
+                  )
+                  .toList(),
             ),
           ],
         ),
@@ -599,6 +592,7 @@ class HabitListState extends State<HabitList> {
     );
   }
 }
+
 
 
 class Item {
@@ -1133,7 +1127,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   }
 }
 
-
 class EditHabitScreen extends StatefulWidget {
   final Habit habit;
 
@@ -1491,7 +1484,6 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
   }
 }
 
-
 class Habit {
   String? id;
   final String title;
@@ -1524,7 +1516,7 @@ class Habit {
       'userId': userId,
       'title': title,
       'description': description,
-      'reminderTime': reminderTime.formatTime(),  // Converte para string
+      'reminderTime': reminderTime.formatTime(), // Converte para string
       'reminderFrequency': reminderFrequency,
       'color': color.value,
       'weekDays': weekDays,
@@ -1540,7 +1532,8 @@ class Habit {
       id: id,
       title: map['title'],
       description: map['description'],
-      reminderTime: _parseTimeOfDay(map['reminderTime']),  // Converte de string para TimeOfDay
+      reminderTime: _parseTimeOfDay(
+          map['reminderTime']), // Converte de string para TimeOfDay
       reminderFrequency: map['reminderFrequency'],
       color: Color(map['color']),
       weekDays: List<bool>.from(map['weekDays']),
