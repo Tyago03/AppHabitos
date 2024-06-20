@@ -5,7 +5,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'firebase_options.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +21,23 @@ void main() async {
   initializeDateFormatting('pt_BR', null).then((_) {
     runApp(MyApp());
   });
+
+  tz.initializeTimeZones();
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) async {
+      // Handle your notification response here
+    },
+  );
 }
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -44,39 +66,12 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _passwordVisible = false;
+  bool _obscureText = true;
 
-  void _login(BuildContext context) async {
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainPage()),
-      );
-    } on FirebaseAuthException catch (e) {
-      _showErrorDialog(context, e.message!);
-    }
-  }
-
-  void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Erro'),
-        content: Text(message),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
   }
 
   @override
@@ -84,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Login', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
       body: Padding(
@@ -110,7 +105,6 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(height: 10),
             TextField(
               controller: _passwordController,
-              obscureText: !_passwordVisible,
               decoration: InputDecoration(
                 labelText: 'Senha',
                 labelStyle: TextStyle(color: Colors.black),
@@ -122,26 +116,34 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                    _obscureText ? Icons.visibility_off : Icons.visibility,
                     color: Colors.black,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _passwordVisible = !_passwordVisible;
-                    });
-                  },
+                  onPressed: _togglePasswordVisibility,
                 ),
               ),
               cursorColor: Colors.black,
+              obscureText: _obscureText,
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                _login(context);
+              onPressed: () async {
+                try {
+                  UserCredential userCredential = await FirebaseAuth.instance
+                      .signInWithEmailAndPassword(
+                          email: _emailController.text,
+                          password: _passwordController.text);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => MainPage()),
+                  );
+                } catch (e) {
+                  print("Failed to sign in: $e");
+                }
               },
               child: Text('Login', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF50909a),
+                backgroundColor: Color(0xFF6d0d8d),
                 padding: EdgeInsets.symmetric(vertical: 15.0),
               ),
             ),
@@ -155,7 +157,7 @@ class _LoginPageState extends State<LoginPage> {
               },
               child: Text('Cadastro', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF50909a),
+                backgroundColor: Color(0xFF6d0d8d),
                 padding: EdgeInsets.symmetric(vertical: 15.0),
               ),
             ),
@@ -175,43 +177,14 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  bool _passwordVisible = false;
-  bool _confirmPasswordVisible = false;
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  bool _obscureText = true;
 
-  void _register(BuildContext context) async {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      _showErrorDialog(context, 'As senhas não coincidem.');
-      return;
-    }
-
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      Navigator.pop(context);
-    } on FirebaseAuthException catch (e) {
-      _showErrorDialog(context, e.message!);
-    }
-  }
-
-  void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Erro'),
-        content: Text(message),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
   }
 
   @override
@@ -245,7 +218,6 @@ class _RegisterPageState extends State<RegisterPage> {
             SizedBox(height: 10),
             TextField(
               controller: _passwordController,
-              obscureText: !_passwordVisible,
               decoration: InputDecoration(
                 labelText: 'Senha',
                 labelStyle: TextStyle(color: Colors.black),
@@ -257,22 +229,18 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                    _obscureText ? Icons.visibility_off : Icons.visibility,
                     color: Colors.black,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _passwordVisible = !_passwordVisible;
-                    });
-                  },
+                  onPressed: _togglePasswordVisibility,
                 ),
               ),
               cursorColor: Colors.black,
+              obscureText: _obscureText,
             ),
             SizedBox(height: 10),
             TextField(
               controller: _confirmPasswordController,
-              obscureText: !_confirmPasswordVisible,
               decoration: InputDecoration(
                 labelText: 'Confirmar Senha',
                 labelStyle: TextStyle(color: Colors.black),
@@ -284,22 +252,32 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _confirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    _obscureText ? Icons.visibility_off : Icons.visibility,
                     color: Colors.black,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _confirmPasswordVisible = !_confirmPasswordVisible;
-                    });
-                  },
+                  onPressed: _togglePasswordVisibility,
                 ),
               ),
               cursorColor: Colors.black,
+              obscureText: _obscureText,
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                _register(context);
+              onPressed: () async {
+                if (_passwordController.text ==
+                    _confirmPasswordController.text) {
+                  try {
+                    UserCredential userCredential = await FirebaseAuth.instance
+                        .createUserWithEmailAndPassword(
+                            email: _emailController.text,
+                            password: _passwordController.text);
+                    Navigator.pop(context);
+                  } catch (e) {
+                    print("Failed to register: $e");
+                  }
+                } else {
+                  print("Passwords do not match");
+                }
               },
               child: Text('Registrar', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
@@ -366,8 +344,8 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Color(0xFF4c1a45),
-        unselectedItemColor: Color(0xFF6c3464),
+        selectedItemColor: Color(0xFF480044),
+        unselectedItemColor: Color(0xFF6d0d8d),
         onTap: _onItemTapped,
       ),
     );
@@ -383,51 +361,27 @@ class HabitList extends StatefulWidget {
 
 class HabitListState extends State<HabitList> {
   final List<Habit> _habits = [];
+  final List<Item> _data = generateItems(3); // Inicializa as seções como abertas
 
   @override
   void initState() {
     super.initState();
-    _loadHabits();
+    _fetchHabits();
   }
 
-  Future<void> _loadHabits() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-            .collection('habits')
-            .where('userId', isEqualTo: user.uid)
-            .get();
+  Future<void> _fetchHabits() async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('habits')
+        .where('userId', isEqualTo: userId)
+        .get();
 
-        final habits = querySnapshot.docs.map((doc) {
-          return Habit.fromMap(doc.data() as Map<String, dynamic>, doc.id);
-        }).toList();
-
-        setState(() {
-          _habits.addAll(habits);
-        });
-      }
-    } catch (e) {
-      print('Error loading habits: $e');
-    }
-  }
-
-  Future<void> _saveHabit(Habit habit) async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        DocumentReference docRef = await FirebaseFirestore.instance
-            .collection('habits')
-            .add(habit.toMap(user.uid));
-        habit.id = docRef.id;
-        setState(() {
-          _habits.add(habit);
-          _habits.sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
-        });
-      }
-    } catch (e) {
-      print('Error saving habit: $e');
-    }
+    setState(() {
+      _habits.addAll(snapshot.docs.map((doc) {
+        var data = doc.data() as Map<String, dynamic>;
+        return Habit.fromMap(data, doc.id);
+      }).toList());
+    });
   }
 
   void _toggleCompleted(int index) {
@@ -436,46 +390,44 @@ class HabitListState extends State<HabitList> {
     });
   }
 
-  void _addHabit(Habit habit) {
-    _saveHabit(habit);
+  Future<void> _addHabit(Habit habit) async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    DocumentReference docRef = await FirebaseFirestore.instance
+        .collection('habits')
+        .add(habit.toMap(userId));
+
+    setState(() {
+      habit.id = docRef.id;
+      _habits.add(habit);
+      _habits.sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
+    });
+
+    _scheduleNotification(habit);
   }
 
-  void _editHabit(int index, Habit editedHabit) {
+  Future<void> _editHabit(int index, Habit editedHabit) async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    await FirebaseFirestore.instance
+        .collection('habits')
+        .doc(editedHabit.id)
+        .update(editedHabit.toMap(userId));
+
     setState(() {
       _habits[index] = editedHabit;
       _habits.sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
     });
+
+    _scheduleNotification(editedHabit);
   }
 
-  void _deleteHabit(int index) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Confirmar Exclusão'),
-        content: Text('Tem certeza que deseja excluir este hábito?'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                FirebaseFirestore.instance
-                    .collection('habits')
-                    .doc(_habits[index].id)
-                    .delete();
-                _habits.removeAt(index);
-              });
-              Navigator.of(ctx).pop();
-            },
-            child: Text('Excluir'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _deleteHabit(int index) async {
+    String habitId = _habits[index].id!;
+    await FirebaseFirestore.instance.collection('habits').doc(habitId).delete();
+
+    setState(() {
+      _habits.removeAt(index);
+      _habits.sort((a, b) => a.nextReminder.compareTo(b.nextReminder));
+    });
   }
 
   List<Habit> get _dailyHabits => _habits
@@ -488,6 +440,31 @@ class HabitListState extends State<HabitList> {
       .where((habit) => habit.reminderFrequency == 'Mensalmente')
       .toList();
 
+  Future<void> _scheduleNotification(Habit habit) async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'habit_channel',
+      'Habit Notifications',
+      channelDescription: 'Channel for habit reminders',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    var platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      habit.id.hashCode,
+      'Lembrete de Hábito',
+      habit.title,
+      tz.TZDateTime.from(habit.nextReminder, tz.local),
+      platformChannelSpecifics,
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -497,7 +474,7 @@ class HabitListState extends State<HabitList> {
                 .textTheme
                 .titleLarge
                 ?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
       body: _habits.isEmpty
@@ -510,32 +487,9 @@ class HabitListState extends State<HabitList> {
             )
           : SingleChildScrollView(
               child: Column(
-                children: [
-                  if (_dailyHabits.isNotEmpty)
-                    HabitCategory(
-                      title: 'Diários',
-                      habits: _dailyHabits,
-                      toggleCompleted: _toggleCompleted,
-                      editHabit: _editHabit,
-                      deleteHabit: _deleteHabit,
-                    ),
-                  if (_weeklyHabits.isNotEmpty)
-                    HabitCategory(
-                      title: 'Semanais',
-                      habits: _weeklyHabits,
-                      toggleCompleted: _toggleCompleted,
-                      editHabit: _editHabit,
-                      deleteHabit: _deleteHabit,
-                    ),
-                  if (_monthlyHabits.isNotEmpty)
-                    HabitCategory(
-                      title: 'Mensais',
-                      habits: _monthlyHabits,
-                      toggleCompleted: _toggleCompleted,
-                      editHabit: _editHabit,
-                      deleteHabit: _deleteHabit,
-                    ),
-                ],
+                children: _data.map<Widget>((Item item) {
+                  return _buildExpansionPanel(item);
+                }).toList(),
               ),
             ),
       floatingActionButton: FloatingActionButton(
@@ -549,12 +503,111 @@ class HabitListState extends State<HabitList> {
           }
         },
         child: Icon(Icons.add, color: Colors.white),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
       ),
       backgroundColor: Color(0xFFe6e6e6),
     );
   }
+
+  Widget _buildExpansionPanel(Item item) {
+    final habitsList = item.headerValue == 'Diários'
+        ? _dailyHabits
+        : item.headerValue == 'Semanais'
+            ? _weeklyHabits
+            : _monthlyHabits;
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 5,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: ExpansionPanelList(
+          expansionCallback: (int index, bool isExpanded) {
+            setState(() {
+              item.isExpanded = !isExpanded;
+            });
+          },
+          children: [
+            ExpansionPanel(
+              headerBuilder: (BuildContext context, bool isExpanded) {
+                return ListTile(
+                  title: Text(
+                    item.headerValue,
+                    style: GoogleFonts.indieFlower(
+                      textStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                );
+              },
+              body: Column(
+                children: habitsList
+                    .asMap()
+                    .entries
+                    .map(
+                      (entry) => HabitTile(
+                        habit: entry.value,
+                        onToggleCompleted: () => _toggleCompleted(entry.key),
+                        onEdit: () async {
+                          final editedHabit = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EditHabitScreen(habit: entry.value),
+                            ),
+                          );
+                          if (editedHabit != null && editedHabit is Habit) {
+                            _editHabit(entry.key, editedHabit);
+                          }
+                        },
+                        onDelete: () => _deleteHabit(entry.key),
+                      ),
+                    )
+                    .toList(),
+              ),
+              isExpanded: item.isExpanded,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+
+class Item {
+  Item({
+    required this.headerValue,
+    this.isExpanded = true,
+  });
+
+  String headerValue;
+  bool isExpanded;
+}
+
+List<Item> generateItems(int numberOfItems) {
+  return List<Item>.generate(numberOfItems, (int index) {
+    return Item(
+      headerValue: index == 0
+          ? 'Diários'
+          : index == 1
+              ? 'Semanais'
+              : 'Mensais',
+    );
+  });
+}
+
+
 
 class HabitCategory extends StatelessWidget {
   final String title;
@@ -805,7 +858,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 .textTheme
                 .titleLarge
                 ?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
@@ -1161,7 +1214,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
                 .textTheme
                 .titleLarge
                 ?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
@@ -1423,7 +1476,7 @@ class _EditHabitScreenState extends State<EditHabitScreen> {
 }
 
 class Habit {
-  String id;
+  String? id;
   final String title;
   final String description;
   final TimeOfDay reminderTime;
@@ -1436,7 +1489,7 @@ class Habit {
   bool isCompleted;
 
   Habit({
-    this.id = '',
+    this.id,
     required this.title,
     required this.description,
     required this.reminderTime,
@@ -1454,34 +1507,46 @@ class Habit {
       'userId': userId,
       'title': title,
       'description': description,
-      'reminderTime': {'hour': reminderTime.hour, 'minute': reminderTime.minute},
+      'reminderTime': reminderTime.formatTime(),  // Converte para string
       'reminderFrequency': reminderFrequency,
       'color': color.value,
       'weekDays': weekDays,
       'weekendDays': weekendDays,
       'monthDays': monthDays,
-      'nextReminder': nextReminder.toIso8601String(),
+      'nextReminder': nextReminder,
       'isCompleted': isCompleted,
     };
   }
 
-  static Habit fromMap(Map<String, dynamic> map, String id) {
+  factory Habit.fromMap(Map<String, dynamic> map, String id) {
     return Habit(
       id: id,
       title: map['title'],
       description: map['description'],
-      reminderTime: TimeOfDay(
-        hour: map['reminderTime']['hour'],
-        minute: map['reminderTime']['minute'],
-      ),
+      reminderTime: _parseTimeOfDay(map['reminderTime']),  // Converte de string para TimeOfDay
       reminderFrequency: map['reminderFrequency'],
       color: Color(map['color']),
       weekDays: List<bool>.from(map['weekDays']),
       weekendDays: List<bool>.from(map['weekendDays']),
       monthDays: List<bool>.from(map['monthDays']),
-      nextReminder: DateTime.parse(map['nextReminder']),
+      nextReminder: (map['nextReminder'] as Timestamp).toDate(),
       isCompleted: map['isCompleted'],
     );
+  }
+
+  static TimeOfDay _parseTimeOfDay(String time) {
+    final parts = time.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+}
+
+extension TimeOfDayExtension on TimeOfDay {
+  String formatTime() {
+    final hourString = hour.toString().padLeft(2, '0');
+    final minuteString = minute.toString().padLeft(2, '0');
+    return '$hourString:$minuteString';
   }
 }
 
@@ -1495,7 +1560,7 @@ class TodayHabits extends StatelessWidget {
                 .textTheme
                 .titleLarge
                 ?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
       body: Center(
@@ -1505,9 +1570,11 @@ class TodayHabits extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
       ),
+      backgroundColor: Color(0xFFe6e6e6),
     );
   }
 }
+
 
 class HabitStatistics extends StatelessWidget {
   @override
@@ -1519,7 +1586,7 @@ class HabitStatistics extends StatelessWidget {
                 .textTheme
                 .titleLarge
                 ?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
       body: Center(
@@ -1529,6 +1596,7 @@ class HabitStatistics extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
       ),
+      backgroundColor: Color(0xFFe6e6e6),
     );
   }
 }
@@ -1543,16 +1611,34 @@ class ProfilePage extends StatelessWidget {
                 .textTheme
                 .titleLarge
                 ?.copyWith(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
       body: Center(
-        child: Text(
-          'Aqui serão exibidas as informações do seu perfil.',
-          style: TextStyle(fontSize: 18, color: Colors.grey),
-          textAlign: TextAlign.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Aqui serão exibidas as informações do seu perfil.',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+              child: Text('Logout', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF6d0d8d),
+                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+              ),
+            ),
+          ],
         ),
       ),
+      backgroundColor: Color(0xFFe6e6e6),
     );
   }
 }
