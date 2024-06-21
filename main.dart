@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -183,6 +184,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -208,6 +210,22 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Nome',
+                labelStyle: TextStyle(color: Colors.black),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                ),
+              ),
+              cursorColor: Colors.black,
+              keyboardType: TextInputType.name,
+            ),
+            SizedBox(height: 10),
             TextField(
               controller: _emailController,
               decoration: InputDecoration(
@@ -238,7 +256,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.black),
+                    color: Colors.black,
+                  ),
                   onPressed: _togglePasswordVisibility,
                 ),
               ),
@@ -277,6 +296,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         .createUserWithEmailAndPassword(
                             email: _emailController.text,
                             password: _passwordController.text);
+                    // Save additional user data like name
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(userCredential.user!.uid)
+                        .set({
+                      'name': _nameController.text,
+                      'email': _emailController.text,
+                    });
                     Navigator.pop(context);
                   } catch (e) {
                     print("Failed to register: $e");
@@ -298,6 +325,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
+
 
 class MainPage extends StatefulWidget {
   @override
@@ -1733,7 +1761,35 @@ class HabitCategory extends StatelessWidget {
   }
 }
 
-class HabitStatistics extends StatelessWidget {
+class HabitStatistics extends StatefulWidget {
+  @override
+  _HabitStatisticsState createState() => _HabitStatisticsState();
+}
+
+class _HabitStatisticsState extends State<HabitStatistics> {
+  final List<Habit> _habits = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHabits();
+  }
+
+  Future<void> _fetchHabits() async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('habits')
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    setState(() {
+      _habits.addAll(snapshot.docs.map((doc) {
+        var data = doc.data() as Map<String, dynamic>;
+        return Habit.fromMap(data, doc.id);
+      }).toList());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1746,19 +1802,217 @@ class HabitStatistics extends StatelessWidget {
         backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
-      body: Center(
-        child: Text(
-          'Aqui serão exibidas as estatísticas dos seus hábitos.',
-          style: TextStyle(fontSize: 18, color: Colors.grey),
-          textAlign: TextAlign.center,
-        ),
-      ),
+      body: _habits.isEmpty
+          ? Center(
+              child: Text(
+                'Você ainda não tem nenhum hábito adicionado.',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Hábitos Completos vs Incompletos',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 200,
+                    child: PieChart(
+                      PieChartData(
+                        sections: _showingSections(),
+                        borderData: FlBorderData(show: false),
+                        sectionsSpace: 2,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Distribuição de Hábitos por Frequência',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 300,
+                    child: BarChart(
+                      BarChartData(
+                        barGroups: _barGroups(),
+                        borderData: FlBorderData(show: false),
+                        titlesData: FlTitlesData(
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                const style = TextStyle(
+                                  color: Color(0xff7589a2),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                );
+                                String text;
+                                switch (value.toInt()) {
+                                  case 0:
+                                    text = 'Diário';
+                                    break;
+                                  case 1:
+                                    text = 'Semanal';
+                                    break;
+                                  case 2:
+                                    text = 'Mensal';
+                                    break;
+                                  default:
+                                    text = '';
+                                    break;
+                                }
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  space: 16,
+                                  child: Text(text, style: style),
+                                );
+                              },
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 28,
+                              interval: 1,
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: TextStyle(
+                                    color: Color(0xff7589a2),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.left,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
       backgroundColor: Color(0xFFe6e6e6),
     );
   }
+
+  List<PieChartSectionData> _showingSections() {
+    final int complete = _habits.where((habit) => habit.isCompleted).length;
+    final int incomplete = _habits.length - complete;
+
+    return List.generate(2, (i) {
+      switch (i) {
+        case 0:
+          return PieChartSectionData(
+            color: const Color(0xff0293ee),
+            value: complete.toDouble(),
+            title: '$complete Completos',
+            radius: 50,
+            titleStyle: const TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xffffffff)),
+          );
+        case 1:
+          return PieChartSectionData(
+            color: const Color(0xfff8b250),
+            value: incomplete.toDouble(),
+            title: '$incomplete Incompletos',
+            radius: 50,
+            titleStyle: const TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xffffffff)),
+          );
+        default:
+          throw Error();
+      }
+    });
+  }
+
+  List<BarChartGroupData> _barGroups() {
+    final dailyCount =
+        _habits.where((habit) => habit.reminderFrequency == 'Diariamente').length;
+    final weeklyCount =
+        _habits.where((habit) => habit.reminderFrequency == 'Semanalmente').length;
+    final monthlyCount =
+        _habits.where((habit) => habit.reminderFrequency == 'Mensalmente').length;
+
+    return [
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            toY: dailyCount.toDouble(),
+            color: Colors.lightBlueAccent,
+            width: 22,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            toY: weeklyCount.toDouble(),
+            color: Colors.lightGreenAccent,
+            width: 22,
+          ),
+        ],
+      ),
+      BarChartGroupData(
+        x: 2,
+        barRods: [
+          BarChartRodData(
+            toY: monthlyCount.toDouble(),
+            color: Colors.orangeAccent,
+            width: 22,
+          ),
+        ],
+      ),
+    ];
+  }
 }
 
-class ProfilePage extends StatelessWidget {
+
+
+class ProfilePage extends StatefulWidget {
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String? _userName;
+  String? _userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userProfile = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      setState(() {
+        _userName = userProfile['name'];
+        _userEmail = user.email;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1771,30 +2025,57 @@ class ProfilePage extends StatelessWidget {
         backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Aqui serão exibidas as informações do seu perfil.',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-              child: Text('Logout', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF6d0d8d),
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+      body: _userName == null || _userEmail == null
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Color(0xFF6d0d8d),
+                    child: Text(
+                      _userName![0],
+                      style: TextStyle(fontSize: 40, color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Nome: $_userName',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Email: $_userEmail',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  SizedBox(height: 20),
+                  Divider(),
+                  SizedBox(height: 20),
+                  Text(
+                    'Informações adicionais',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  // Adicione mais informações aqui conforme necessário
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginPage()),
+                      );
+                    },
+                    child: Text('Logout', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF6d0d8d),
+                      padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       backgroundColor: Color(0xFFe6e6e6),
     );
   }
