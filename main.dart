@@ -592,9 +592,12 @@ class HabitListState extends State<HabitList> {
             )
           : SingleChildScrollView(
               child: Column(
-                children: _data.map<Widget>((Item item) {
-                  return _buildExpansionPanel(item);
-                }).toList(),
+                children: [
+                  ..._data.map<Widget>((Item item) {
+                    return _buildExpansionPanel(item);
+                  }).toList(),
+                  SizedBox(height: 80), // Adiciona espaço extra
+                ],
               ),
             ),
       floatingActionButton: FloatingActionButton(
@@ -679,6 +682,7 @@ class HabitListState extends State<HabitList> {
     );
   }
 }
+
 
 class Item {
   Item({
@@ -913,6 +917,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: <Widget>[
+            SizedBox(height: 50), // Adiciona espaçamento no topo
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -1097,7 +1102,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                       Navigator.pop(context);
                     },
                     child: Text('Cancelar',
-                        style: TextStyle(color: Color(0xFFFF6961))),
+                        style: TextStyle(color: Color(0xFFFF6961), fontSize: 18)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFFe6e6e6),
                       foregroundColor: Color(0xFFFF6961),
@@ -1146,9 +1151,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                       }
                     },
                     child:
-                        Text('Salvar', style: TextStyle(color: Colors.white)),
+                        Text('Salvar', style: TextStyle(color: Colors.white, fontSize: 18)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF8bc34a),
+                      backgroundColor: Color(0xFF6d0d8d),
                       padding: EdgeInsets.symmetric(vertical: 20.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
@@ -1165,6 +1170,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 }
+
 
 class EditHabitScreen extends StatefulWidget {
   final Habit habit;
@@ -1977,21 +1983,21 @@ class _HabitStatisticsState extends State<HabitStatistics> {
       switch (i) {
         case 0:
           return PieChartSectionData(
-            color: const Color(0xff0293ee),
+            color: const Color(0xff9061c2),
             value: complete.toDouble(),
             title: '$complete Completos',
             radius: 50,
             titleStyle: const TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xffffffff)),
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
           );
         case 1:
           return PieChartSectionData(
-            color: const Color(0xfff8b250),
+            color: const Color(0xffe84d5b),
             value: incomplete.toDouble(),
             title: '$incomplete Incompletos',
             radius: 50,
             titleStyle: const TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xffffffff)),
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
           );
         default:
           throw Error();
@@ -2057,7 +2063,6 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadUserProfile();
-    _fetchHabitCount();
   }
 
   Future<void> _loadUserProfile() async {
@@ -2068,23 +2073,15 @@ class _ProfilePageState extends State<ProfilePage> {
           .doc(user.uid)
           .get();
 
-      setState(() {
-        _userName = userProfile['name'];
-        _userEmail = user.email;
-      });
-    }
-  }
-
-  Future<void> _fetchHabitCount() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
+      QuerySnapshot habitsSnapshot = await FirebaseFirestore.instance
           .collection('habits')
           .where('userId', isEqualTo: user.uid)
           .get();
 
       setState(() {
-        _habitCount = snapshot.size;
+        _userName = userProfile['name'];
+        _userEmail = user.email;
+        _habitCount = habitsSnapshot.size;
       });
     }
   }
@@ -2135,7 +2132,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Quantidade de hábitos criados: $_habitCount',
+                    'Quantidade de Hábitos: $_habitCount',
                     style: TextStyle(fontSize: 18),
                   ),
                   Spacer(),
@@ -2148,15 +2145,14 @@ class _ProfilePageState extends State<ProfilePage> {
                           MaterialPageRoute(builder: (context) => LoginPage()),
                         );
                       },
-                      child: Text('Logout', style: TextStyle(color: Colors.white)),
+                      child: Text('Logout', style: TextStyle(color: Colors.white, fontSize: 18)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF6d0d8d),
-                        padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
-                        minimumSize: Size(200, 50), // Aumenta o tamanho do botão
+                        padding: EdgeInsets.symmetric(vertical: 15.0),
+                        minimumSize: Size(double.infinity, 50), // Largura total e altura maior
                       ),
                     ),
                   ),
-                  SizedBox(height: 20), // Adiciona um espaço abaixo do botão
                 ],
               ),
             ),
@@ -2164,3 +2160,4 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+
