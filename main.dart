@@ -91,11 +91,29 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Text(
+              'HabiTrack',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              'Monitorador de Hábitos',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 30),
             TextField(
               controller: _emailController,
               decoration: InputDecoration(
@@ -205,11 +223,29 @@ class _RegisterPageState extends State<RegisterPage> {
         backgroundColor: Color(0xFF50909a),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Text(
+              'HabiTrack',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              'Monitorador de Hábitos',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 30),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -325,6 +361,8 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
+
+
 
 
 class MainPage extends StatefulWidget {
@@ -1841,67 +1879,66 @@ class _HabitStatisticsState extends State<HabitStatistics> {
                     ),
                   ),
                   SizedBox(
-                    height: 400, // Aumente a altura para permitir rolagem
+                    height: 200,
                     child: BarChart(
                       BarChartData(
-                        barGroups: _barGroups(),
-                        borderData: FlBorderData(show: false),
+                        alignment: BarChartAlignment.spaceAround,
+                        maxY: _getMaxY(),
+                        barTouchData: BarTouchData(enabled: false),
                         titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 40,
+                              getTitlesWidget: (value, meta) {
+                                if (value % 1 == 0) { // Show only integer values
+                                  return Text(
+                                    value.toInt().toString(),
+                                    style: TextStyle(
+                                      color: Color(0xff7589a2),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                  );
+                                } else {
+                                  return Container(); // Don't show fractional values
+                                }
+                              },
+                            ),
+                          ),
                           bottomTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
                               getTitlesWidget: (double value, TitleMeta meta) {
-                                const style = TextStyle(
-                                  color: Color(0xff7589a2),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                );
-                                String text;
                                 switch (value.toInt()) {
                                   case 0:
-                                    text = 'Diário';
-                                    break;
+                                    return Text('Diário');
                                   case 1:
-                                    text = 'Semanal';
-                                    break;
+                                    return Text('Semanal');
                                   case 2:
-                                    text = 'Mensal';
-                                    break;
+                                    return Text('Mensal');
                                   default:
-                                    text = '';
-                                    break;
+                                    return Text('');
                                 }
-                                return SideTitleWidget(
-                                  axisSide: meta.axisSide,
-                                  space: 16,
-                                  child: Text(text, style: style),
-                                );
                               },
                             ),
                           ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 28,
-                              interval: 1,
-                              getTitlesWidget: (double value, TitleMeta meta) {
-                                return Text(
-                                  value.toInt().toString(),
-                                  style: TextStyle(
-                                    color: Color(0xff7589a2),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.left,
-                                );
-                              },
-                            ),
+                          topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
                           ),
                         ),
+                        borderData: FlBorderData(
+                          show: false,
+                        ),
+                        barGroups: _getBarGroups(),
                       ),
                     ),
                   ),
-                  SizedBox(height: 100), // Adiciona espaço extra para rolagem
+                  SizedBox(height: 20), // Adiciona espaço extra para rolagem
                 ],
               ),
             ),
@@ -1939,13 +1976,10 @@ class _HabitStatisticsState extends State<HabitStatistics> {
     });
   }
 
-  List<BarChartGroupData> _barGroups() {
-    final dailyCount =
-        _habits.where((habit) => habit.reminderFrequency == 'Diariamente').length;
-    final weeklyCount =
-        _habits.where((habit) => habit.reminderFrequency == 'Semanalmente').length;
-    final monthlyCount =
-        _habits.where((habit) => habit.reminderFrequency == 'Mensalmente').length;
+  List<BarChartGroupData> _getBarGroups() {
+    final dailyCount = _habits.where((habit) => habit.reminderFrequency == 'Diariamente').length;
+    final weeklyCount = _habits.where((habit) => habit.reminderFrequency == 'Semanalmente').length;
+    final monthlyCount = _habits.where((habit) => habit.reminderFrequency == 'Mensalmente').length;
 
     return [
       BarChartGroupData(
@@ -1953,8 +1987,7 @@ class _HabitStatisticsState extends State<HabitStatistics> {
         barRods: [
           BarChartRodData(
             toY: dailyCount.toDouble(),
-            color: Colors.lightBlueAccent,
-            width: 22,
+            color: Colors.blue,
           ),
         ],
       ),
@@ -1963,8 +1996,7 @@ class _HabitStatisticsState extends State<HabitStatistics> {
         barRods: [
           BarChartRodData(
             toY: weeklyCount.toDouble(),
-            color: Colors.lightGreenAccent,
-            width: 22,
+            color: Colors.green,
           ),
         ],
       ),
@@ -1973,12 +2005,18 @@ class _HabitStatisticsState extends State<HabitStatistics> {
         barRods: [
           BarChartRodData(
             toY: monthlyCount.toDouble(),
-            color: Colors.orangeAccent,
-            width: 22,
+            color: Colors.orange,
           ),
         ],
       ),
     ];
+  }
+
+  double _getMaxY() {
+    final dailyCount = _habits.where((habit) => habit.reminderFrequency == 'Diariamente').length;
+    final weeklyCount = _habits.where((habit) => habit.reminderFrequency == 'Semanalmente').length;
+    final monthlyCount = _habits.where((habit) => habit.reminderFrequency == 'Mensalmente').length;
+    return [dailyCount, weeklyCount, monthlyCount].reduce((a, b) => a > b ? a : b).toDouble();
   }
 }
 
@@ -1990,11 +2028,13 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String? _userName;
   String? _userEmail;
+  int _habitCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _fetchHabitCount();
   }
 
   Future<void> _loadUserProfile() async {
@@ -2008,6 +2048,20 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _userName = userProfile['name'];
         _userEmail = user.email;
+      });
+    }
+  }
+
+  Future<void> _fetchHabitCount() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('habits')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      setState(() {
+        _habitCount = snapshot.size;
       });
     }
   }
@@ -2056,22 +2110,30 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Informações adicionais',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  // Adicione mais informações aqui conforme necessário
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginPage()),
-                      );
-                    },
-                    child: Text('Logout', style: TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF6d0d8d),
-                      padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                  SizedBox(height: 10),
+                  Text(
+                    'Quantidade de hábitos criados: $_habitCount',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  Spacer(),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
+                      },
+                      child: Text('Logout', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF6d0d8d),
+                        padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+                        minimumSize: Size(200, 50), // Aumenta o tamanho do botão
+                      ),
                     ),
                   ),
+                  SizedBox(height: 20), // Adiciona um espaço abaixo do botão
                 ],
               ),
             ),
