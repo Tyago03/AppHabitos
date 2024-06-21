@@ -20,26 +20,12 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  runApp(MaterialApp(home: ForgotPasswordPage()));
   initializeDateFormatting('pt_BR', null).then((_) {
     runApp(MyApp());
   });
 
   tz.initializeTimeZones();
-
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  const InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-  );
-
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse response) async {
-      // Handle your notification response here
-    },
-  );
-
-  await _checkAndRequestExactAlarmPermission(); // Verifica e solicita a permissão para alarmes exatos
 }
 
 Future<void> _checkAndRequestExactAlarmPermission() async {
@@ -76,7 +62,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
-  String _errorMessage = '';
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -93,120 +78,142 @@ class _LoginPageState extends State<LoginPage> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'HabiTrack',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            Text(
-              'Monitorador de Hábitos',
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.black,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 30),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'E-mail',
-                labelStyle: TextStyle(color: Colors.black),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
-                ),
-              ),
-              cursorColor: Colors.black,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Senha',
-                labelStyle: TextStyle(color: Colors.black),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
-                ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.black,
-                  ),
-                  onPressed: _togglePasswordVisibility,
-                ),
-              ),
-              cursorColor: Colors.black,
-              obscureText: _obscureText,
-            ),
-            SizedBox(height: 10),
-            if (_errorMessage.isNotEmpty)
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: 40),
               Text(
-                _errorMessage,
-                style: TextStyle(color: Colors.red),
+                'HabiTrack',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  UserCredential userCredential = await FirebaseAuth.instance
-                      .signInWithEmailAndPassword(
-                          email: _emailController.text,
-                          password: _passwordController.text);
-                  Navigator.pushReplacement(
+              SizedBox(height: 10),
+              Text(
+                'Monitorador de Hábitos',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 40),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: 'E-mail',
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                ),
+                cursorColor: Colors.black,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: 'Senha',
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.black,
+                    ),
+                    onPressed: _togglePasswordVisibility,
+                  ),
+                ),
+                cursorColor: Colors.black,
+                obscureText: _obscureText,
+              ),
+              SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                    );
+                  },
+                  child: Text(
+                    'Esqueci a senha',
+                    style: TextStyle(
+                      color: Color(0xFF6d0d8d),
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    UserCredential userCredential = await FirebaseAuth.instance
+                        .signInWithEmailAndPassword(
+                        email: _emailController.text,
+                        password: _passwordController.text);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => MainPage()),
+                    );
+                  } catch (e) {
+                    print("Failed to sign in: $e");
+                  }
+                },
+                child: Text(
+                  'Login',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF6d0d8d),
+                  padding: EdgeInsets.symmetric(vertical: 15.0),
+                  minimumSize: Size(double.infinity, 50),
+                ),
+              ),
+              SizedBox(height: 10),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => MainPage()),
+                    MaterialPageRoute(builder: (context) => RegisterPage()),
                   );
-                } catch (e) {
-                  setState(() {
-                    _errorMessage = "O Login falhou.";
-                  });
-                }
-              },
-              child: Text('Login', style: TextStyle(color: Colors.white, fontSize: 18)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF6d0d8d),
-                padding: EdgeInsets.symmetric(vertical: 15.0),
-                minimumSize: Size(double.infinity, 50), // Largura total e altura maior
+                },
+                child: Text(
+                  'Cadastro',
+                  style: TextStyle(
+                    color: Color(0xFF6d0d8d),
+                    fontSize: 18,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 15.0),
+                  minimumSize: Size(double.infinity, 50),
+                  side: BorderSide(color: Color(0xFF6d0d8d)),
+                ),
               ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RegisterPage()),
-                );
-              },
-              child: Text('Cadastro', style: TextStyle(color: Color(0xFF6d0d8d), fontSize: 18)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                side: BorderSide(color: Color(0xFF6d0d8d)),
-                padding: EdgeInsets.symmetric(vertical: 15.0),
-                minimumSize: Size(double.infinity, 50), // Largura total e altura maior
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       backgroundColor: Color(0xFFe6e6e6),
     );
   }
 }
+
 
 
 class RegisterPage extends StatefulWidget {
@@ -2156,6 +2163,104 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
+      backgroundColor: Color(0xFFe6e6e6),
+    );
+  }
+}
+
+class ForgotPasswordPage extends StatefulWidget {
+  @override
+  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
+}
+
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final TextEditingController _emailController = TextEditingController();
+  String? _message;
+  bool _isError = false;
+
+  Future<void> _resetPassword() async {
+    try {
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: _emailController.text);
+      setState(() {
+        _message = 'Um E-Mail foi enviado';
+        _isError = false;
+      });
+    } catch (e) {
+      setState(() {
+        _message = 'E-Mail não encontrado';
+        _isError = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Esqueci a Senha', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF6d0d8d),
+        centerTitle: true,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 40), // Adicionado para levantar a tela
+                Text(
+                  'Insira seu E-Mail. Vamos enviar uma mensagem para redefinição da senha.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: 'E-mail',
+                    labelStyle: TextStyle(color: Colors.black),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black),
+                    ),
+                  ),
+                  cursorColor: Colors.black,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _resetPassword,
+                    child: Text('Enviar', style: TextStyle(color: Colors.white, fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF6d0d8d),
+                      padding: EdgeInsets.symmetric(vertical: 15.0),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                if (_message != null)
+                  Text(
+                    _message!,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _isError ? Colors.red : Colors.green,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
       backgroundColor: Color(0xFFe6e6e6),
     );
   }
