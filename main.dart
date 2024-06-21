@@ -76,6 +76,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
+  String _errorMessage = '';
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -152,7 +153,13 @@ class _LoginPageState extends State<LoginPage> {
               cursorColor: Colors.black,
               obscureText: _obscureText,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
+            if (_errorMessage.isNotEmpty)
+              Text(
+                _errorMessage,
+                style: TextStyle(color: Colors.red),
+              ),
+            SizedBox(height: 10),
             ElevatedButton(
               onPressed: () async {
                 try {
@@ -165,13 +172,16 @@ class _LoginPageState extends State<LoginPage> {
                     MaterialPageRoute(builder: (context) => MainPage()),
                   );
                 } catch (e) {
-                  print("Failed to sign in: $e");
+                  setState(() {
+                    _errorMessage = "O Login falhou.";
+                  });
                 }
               },
-              child: Text('Login', style: TextStyle(color: Colors.white)),
+              child: Text('Login', style: TextStyle(color: Colors.white, fontSize: 18)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF6d0d8d),
                 padding: EdgeInsets.symmetric(vertical: 15.0),
+                minimumSize: Size(double.infinity, 50), // Largura total e altura maior
               ),
             ),
             SizedBox(height: 10),
@@ -182,10 +192,12 @@ class _LoginPageState extends State<LoginPage> {
                   MaterialPageRoute(builder: (context) => RegisterPage()),
                 );
               },
-              child: Text('Cadastro', style: TextStyle(color: Colors.white)),
+              child: Text('Cadastro', style: TextStyle(color: Color(0xFF6d0d8d), fontSize: 18)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF6d0d8d),
+                backgroundColor: Colors.white,
+                side: BorderSide(color: Color(0xFF6d0d8d)),
                 padding: EdgeInsets.symmetric(vertical: 15.0),
+                minimumSize: Size(double.infinity, 50), // Largura total e altura maior
               ),
             ),
           ],
@@ -196,6 +208,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
+
 class RegisterPage extends StatefulWidget {
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -205,9 +218,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   bool _obscureText = true;
+  String _errorMessage = '';
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -220,8 +233,9 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Cadastro', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF50909a),
+        backgroundColor: Color(0xFF6d0d8d),
         centerTitle: true,
+        iconTheme: IconThemeData(color: Colors.white), // Cor da seta de voltar para branco
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -322,11 +336,16 @@ class _RegisterPageState extends State<RegisterPage> {
               cursorColor: Colors.black,
               obscureText: _obscureText,
             ),
+            SizedBox(height: 10),
+            if (_errorMessage.isNotEmpty)
+              Text(
+                _errorMessage,
+                style: TextStyle(color: Colors.red),
+              ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                if (_passwordController.text ==
-                    _confirmPasswordController.text) {
+                if (_passwordController.text == _confirmPasswordController.text) {
                   try {
                     UserCredential userCredential = await FirebaseAuth.instance
                         .createUserWithEmailAndPassword(
@@ -342,16 +361,21 @@ class _RegisterPageState extends State<RegisterPage> {
                     });
                     Navigator.pop(context);
                   } catch (e) {
-                    print("Failed to register: $e");
+                    setState(() {
+                      _errorMessage = "O Cadastro falhou.";
+                    });
                   }
                 } else {
-                  print("Passwords do not match");
+                  setState(() {
+                    _errorMessage = "As senhas não coincidem.";
+                  });
                 }
               },
-              child: Text('Registrar', style: TextStyle(color: Colors.white)),
+              child: Text('Cadastrar', style: TextStyle(color: Colors.white, fontSize: 18)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF50909a),
+                backgroundColor: Color(0xFF6d0d8d),
                 padding: EdgeInsets.symmetric(vertical: 15.0),
+                minimumSize: Size(double.infinity, 50), // Largura total e altura maior
               ),
             ),
           ],
@@ -361,7 +385,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
-
 
 
 
