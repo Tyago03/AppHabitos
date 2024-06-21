@@ -1841,7 +1841,7 @@ class _HabitStatisticsState extends State<HabitStatistics> {
                     ),
                   ),
                   SizedBox(
-                    height: 300,
+                    height: 400, // Aumente a altura para permitir rolagem
                     child: BarChart(
                       BarChartData(
                         barGroups: _barGroups(),
@@ -1901,6 +1901,7 @@ class _HabitStatisticsState extends State<HabitStatistics> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 100), // Adiciona espaço extra para rolagem
                 ],
               ),
             ),
@@ -1980,8 +1981,6 @@ class _HabitStatisticsState extends State<HabitStatistics> {
     ];
   }
 }
-
-
 
 class ProfilePage extends StatefulWidget {
   @override
