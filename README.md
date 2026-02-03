@@ -178,3 +178,8 @@ Durante o desenvolvimento deste projeto foram aplicados conhecimentos de:
 ## Licença
 
 Este projeto foi desenvolvido para fins educacionais como parte de um trabalho acadêmico.
+
+© 2026 Tyago03 e colaboradores. Todos os direitos reservados.
+
+Este software é disponibilizado apenas para fins de demonstração em portfólio.
+
