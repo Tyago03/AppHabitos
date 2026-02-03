@@ -1,6 +1,6 @@
 # HabiTrack - Monitorador de Hábitos
 
-Aplicativo mobile desenvolvido como projeto acadêmico para gerenciamento e acompanhamento de hábitos diários, semanais e mensais. O projeto foi criado utilizando Flutter e Firebase, com foco em notificações programadas e visualização de estatísticas.
+Primeiro aplicativo mobile desenvolvido, como projeto acadêmico para gerenciamento e acompanhamento de hábitos diários, semanais e mensais. O projeto foi criado utilizando Flutter e Firebase, com foco em notificações programadas e visualização de estatísticas.
 
 ## Sobre o Projeto
 
