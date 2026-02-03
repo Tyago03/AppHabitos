@@ -175,13 +175,6 @@ Durante o desenvolvimento deste projeto foram aplicados conhecimentos de:
 - Persistência de dados em tempo real
 - Validação de formulários e tratamento de erros
 
-## Autor
-
-**Tyago Martins**
-
-- GitHub: [@Tyago03](https://github.com/Tyago03)
-- LinkedIn: [Seu LinkedIn](seu-link-linkedin)
-
 ## Licença
 
 Este projeto foi desenvolvido para fins educacionais como parte de um trabalho acadêmico.
