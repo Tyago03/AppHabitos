@@ -8,6 +8,17 @@ O projeto original foi desenvolvido com Flutter/Firebase para gerenciar hábitos
 
 > **Estado:** nova implementação de portfólio com funcionamento **offline e armazenamento local**, sem Firebase ou cadastro. Esta reconstrução **não recupera dados de contas antigas** nem afirma reproduzir todas as funcionalidades do protótipo original. A nova entrada da aplicação é `lib/main.dart`; o `main.dart` da raiz é histórico.
 
+## Capturas do aplicativo em execução (dados fictícios)
+
+As imagens são capturadas pelo navegador Chrome com **Flutter Web realmente executado**, em um build de demonstração que carrega apenas dados **sintéticos**. A interface mostra a etiqueta `DEMO`. Não é uma captura de contas reais nem uma validação Android.
+
+<p>
+  <img src="docs/preview-hoje.png" width="310" alt="HabiTrack, tela Hoje com hábitos fictícios" />
+  <img src="docs/preview-resumo.png" width="310" alt="HabiTrack, resumo semanal fictício" />
+</p>
+
+O modo de demonstração pode ser compilado separadamente com `flutter build web --release --dart-define=HABITTRACK_DEMO=true`. O build normal mantém os dados locais de cada instalação.
+
 ## Funcionalidades da reconstrução
 
 | Recurso | Estado |

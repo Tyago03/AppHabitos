@@ -1,0 +1,60 @@
+name: Capturas reais HabiTrack (demo)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/screenshots.yml'
+      - 'lib/**'
+      - 'pubspec.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build Flutter Web com dados fictícios
+        run: |
+          flutter create --platforms=web --project-name=habittrack .
+          flutter pub get
+          flutter build web --release --dart-define=HABITTRACK_DEMO=true
+      - name: Executar e capturar no Chrome
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory build/web >/tmp/habittrack-http.log 2>&1 &
+          P=$!
+          trap 'kill $P || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then break; fi
+            sleep 1
+          done
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          mkdir -p docs
+          "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --virtual-time-budget=16000 --window-size=480,940 --screenshot="$GITHUB_WORKSPACE/docs/preview-hoje.png" 'http://127.0.0.1:8765/?tab=0'
+          "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --virtual-time-budget=16000 --window-size=480,940 --screenshot="$GITHUB_WORKSPACE/docs/preview-resumo.png" 'http://127.0.0.1:8765/?tab=2'
+          file docs/preview-*.png
+          test -s docs/preview-hoje.png
+          test -s docs/preview-resumo.png
+      - name: Salvar capturas no repositório
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/preview-hoje.png docs/preview-resumo.png
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs: prints reais Flutter em modo demonstração'
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: habittrack-preview
+          path: |
+            docs/preview-hoje.png
+            docs/preview-resumo.png

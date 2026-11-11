@@ -6,9 +6,11 @@ import '../models/habit.dart';
 import 'habit_editor.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.repository});
+  const HomePage({super.key, required this.repository, this.demoMode = false, this.initialTab = 0});
 
   final HabitRepository repository;
+  final bool demoMode;
+  final int initialTab;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -22,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _tab = widget.initialTab;
     _controller = HabitController(widget.repository);
     _controller.initialize();
   }
@@ -196,6 +199,9 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 100),
       children: [
         Text('Minha rotina', style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 5),
+        Text('Pequenas ações, grandes resultados.',
+            style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: _chooseDate,
@@ -333,6 +339,12 @@ class _HomePageState extends State<HomePage> {
             Text('HabiTrack'),
           ],
         ),
+        actions: widget.demoMode
+            ? [const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Chip(label: Text('DEMO', style: TextStyle(fontSize: 10))),
+              )]
+            : null,
       ),
       body: AnimatedBuilder(
         animation: _controller,
