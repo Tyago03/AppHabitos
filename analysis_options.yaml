@@ -1,6 +1,9 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  # O arquivo main.dart na raiz é o código acadêmico histórico, preservado
+  # mas não utilizado pela aplicação reconstruída (lib/main.dart).
+  exclude:
+    - main.dart
   errors:
-    # As configurações padrão do linter continuam ativas.
     todo: ignore
