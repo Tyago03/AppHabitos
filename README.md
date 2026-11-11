@@ -1,5 +1,7 @@
 # HabiTrack — App de Hábitos (Flutter)
 
+[![Flutter CI](https://github.com/Tyago03/AppHabitos/actions/workflows/flutter.yml/badge.svg)](https://github.com/Tyago03/AppHabitos/actions/workflows/flutter.yml)
+
 **Reconstrução de um projeto acadêmico antigo em Flutter.**
 
 O projeto original foi desenvolvido com Flutter/Firebase para gerenciar hábitos e notificações. Os arquivos originais de plataforma e configuração foram perdidos; apenas o `main.dart` antigo e um ícone sobreviveram. Em novembro de 2026, a aplicação foi **reescrita com assistência de IA**, mantendo o código histórico como referência.
@@ -19,7 +21,7 @@ O projeto original foi desenvolvido com Flutter/Firebase para gerenciar hábitos
 | Horário preferido | Salvo no hábito; **não** gera notificações |
 | Autenticação com Firebase e sincronização Firestore | **Não implementadas nesta reconstrução** |
 | Notificações locais programadas | **Não implementadas nesta reconstrução** |
-| Versões Android/Web | Geráveis localmente com Flutter; confirmar CI/compilação |
+| Versões Android/Web | Scaffolding Android/Web gerado no CI e **build Web aprovado**; Android ainda não foi compilado/testado em aparelho. |
 
 ## Tecnologias
 
@@ -49,7 +51,7 @@ flutter test
 flutter build web
 ```
 
-O workflow em [GitHub Actions](.github/workflows/flutter.yml) faz verificação equivalente em ambiente Linux com Flutter estável. CI aprovada indica que o código atual passa nos testes e na construção Web; não substitui testes em dispositivos Android reais.
+Em **11/11/2026**, o [GitHub Actions](.github/workflows/flutter.yml) confirmou **11 testes aprovados**, análise estática sem problemas e **compilação Flutter Web concluída**. Isso não substitui testes em dispositivos Android reais.
 
 ## Organização
 
