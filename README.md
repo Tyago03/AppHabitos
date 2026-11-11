@@ -1,174 +1,81 @@
-# HabiTrack - Monitorador de Hábitos
+# HabiTrack — App de Hábitos (Flutter)
 
-Primeiro aplicativo mobile desenvolvido como projeto acadêmico para gerenciamento e acompanhamento de hábitos diários, semanais e mensais, utilizando Flutter e Firebase. O foco foi explorar autenticação, persistência, notificações e estatísticas.
+**Reconstrução de um projeto acadêmico antigo em Flutter.**
 
-> **Estado da publicação:** este repositório compartilha o **código-fonte principal** do protótipo, não a estrutura Flutter completa. Estão publicados `main.dart`, `ic_launcher.png` e este README, mas **faltam** `pubspec.yaml`, arquivos de plataformas e `firebase_options.dart`. Portanto, o projeto **não pode ser executado diretamente após `git clone`**. Os recursos listados abaixo descrevem a implementação acadêmica; não constituem uma versão compilada e validada deste repositório.
+O projeto original foi desenvolvido com Flutter/Firebase para gerenciar hábitos e notificações. Os arquivos originais de plataforma e configuração foram perdidos; apenas o `main.dart` antigo e um ícone sobreviveram. Em novembro de 2026, a aplicação foi **reescrita com assistência de IA**, mantendo o código histórico como referência.
 
-## Sobre o Projeto
+> **Estado:** nova implementação de portfólio com funcionamento **offline e armazenamento local**, sem Firebase ou cadastro. Esta reconstrução **não recupera dados de contas antigas** nem afirma reproduzir todas as funcionalidades do protótipo original. A nova entrada da aplicação é `lib/main.dart`; o `main.dart` da raiz é histórico.
 
-O HabiTrack é um aplicativo de rastreamento de hábitos que permite aos usuários criar, organizar e monitorar seus hábitos de forma intuitiva. Este projeto foi desenvolvido como atividade acadêmica com o objetivo de aplicar conceitos de desenvolvimento mobile, integração com backend e gerenciamento de notificações.
+## Funcionalidades da reconstrução
 
-## Funcionalidades
+| Recurso | Estado |
+| --- | --- |
+| Criar, editar e excluir hábitos | Implementado |
+| Frequência diária, semanal ou mensal | Implementado |
+| Marcar uma ocorrência como concluída por data | Implementado |
+| Visualizar hábitos da data selecionada | Implementado |
+| Resumo dos últimos sete dias e progresso | Implementado |
+| Persistência local em JSON com `shared_preferences` | Implementado (uso demonstrativo) |
+| Horário preferido | Salvo no hábito; **não** gera notificações |
+| Autenticação com Firebase e sincronização Firestore | **Não implementadas nesta reconstrução** |
+| Notificações locais programadas | **Não implementadas nesta reconstrução** |
+| Versões Android/Web | Geráveis localmente com Flutter; confirmar CI/compilação |
 
-### Gerenciamento de Usuários
-- Fluxos de autenticação com Firebase Authentication
-- Cadastro de novos usuários com validação de dados
-- Login seguro com email e senha
-- Recuperação de senha via email
-- Perfil do usuário com informações personalizadas
+## Tecnologias
 
-### Gerenciamento de Hábitos
-- Criação de hábitos personalizados com nome e descrição
-- Configuração de frequência de lembretes (diária, semanal ou mensal)
-- Definição de horários específicos para notificações
-- Seleção de dias da semana para hábitos semanais
-- Seleção de dias do mês para hábitos mensais
-- Personalização de cores para cada hábito
-- Edição e exclusão de hábitos existentes
+**Flutter + Dart**, Material Design 3 e `shared_preferences` (persistência local). Sem API de IA embutida, servidor, conta ou serviços pagos. A IA foi utilizada como apoio no processo de reconstrução, não como funcionalidade do aplicativo.
 
-### Organização e Visualização
-- Visualização de todos os hábitos organizados por frequência
-- Tela dedicada "Hoje" mostrando apenas hábitos do dia atual
-- Agrupamento automático em categorias: Diários, Semanais e Mensais
-- Marcação de hábitos como concluídos
-- Separação visual entre hábitos pendentes e concluídos
+## Executar no Windows
 
-### Notificações
-- Sistema de notificações locais programadas
-- Lembretes automáticos baseados na frequência configurada
-- Notificações persistentes mesmo com o app fechado
+Instale o [Flutter SDK](https://docs.flutter.dev/get-started/install) e configure um ambiente Android ou navegador para Flutter Web. No PowerShell:
 
-### Estatísticas
-- Gráfico de pizza mostrando hábitos completos vs incompletos
-- Gráfico de barras com distribuição de hábitos por frequência
-- Visualização clara do progresso geral
-- Contagem total de hábitos cadastrados
-
-## Tecnologias Utilizadas
-
-### Framework e Linguagem
-- Flutter
-- Dart
-
-### Backend e Banco de Dados
-- Firebase Core
-- Firebase Authentication (autenticação de usuários)
-- Cloud Firestore (armazenamento de dados)
-
-### Bibliotecas e Pacotes
-- **google_fonts** - Tipografia personalizada (Indie Flower)
-- **intl** - Formatação de datas e internacionalização (pt-BR)
-- **flutter_local_notifications** - Sistema de notificações locais
-- **timezone** - Gerenciamento de fusos horários para notificações
-- **permission_handler** - Solicitação de permissões do sistema
-- **fl_chart** - Gráficos estatísticos (pizza e barras)
-
-## Estrutura do Projeto
-
-O aplicativo está organizado em diferentes telas e componentes:
-
-### Telas Principais
-- **LoginPage** - Autenticação de usuários
-- **RegisterPage** - Cadastro de novos usuários
-- **ForgotPasswordPage** - Recuperação de senha
-- **MainPage** - Navegação principal com bottom navigation bar
-- **HabitList** - Lista completa de hábitos
-- **TodayHabits** - Hábitos do dia atual
-- **HabitStatistics** - Estatísticas e gráficos
-- **ProfilePage** - Perfil do usuário
-- **AddHabitScreen** - Criação de novos hábitos
-- **EditHabitScreen** - Edição de hábitos existentes
-
-### Componentes
-- **HabitTile** - Card individual de hábito com expansão
-- **Habit** - Modelo de dados para hábitos
-
-## Requisitos
-
-Para executar este projeto, você precisa ter instalado:
-
-- Flutter SDK (versão 2.0 ou superior)
-- Dart SDK
-- Android Studio ou VS Code com extensões Flutter
-- Dispositivo Android/iOS ou emulador configurado
-- Conta Firebase com projeto configurado
-
-## Configuração do Firebase
-
-Antes de executar o aplicativo, é necessário:
-
-1. Criar um projeto no Firebase Console
-2. Adicionar o aplicativo Android/iOS ao projeto Firebase
-3. Baixar o arquivo de configuração:
-   - `google-services.json` para Android
-   - `GoogleService-Info.plist` para iOS
-4. Habilitar Authentication (Email/Password)
-5. Criar banco de dados Firestore
-6. Configurar as regras de segurança do Firestore
-
-## Como explorar ou reconstruir o protótipo
-
-Para consultar o código publicado:
-
-```bash
+```powershell
 git clone https://github.com/Tyago03/AppHabitos.git
 cd AppHabitos
+flutter create --platforms=android,web --project-name=habittrack .
+flutter pub get
+flutter run -d chrome
 ```
 
-O arquivo `main.dart` reúne as telas e a lógica do exercício. **Ainda não há um projeto Flutter completo para usar `flutter pub get` ou `flutter run` diretamente nesta pasta.**
+O comando `flutter create` **regera apenas os arquivos de plataforma ausentes**, porque eles não sobreviveram ao projeto original. Para Android, com emulador ou celular configurado, use `flutter run` e selecione o dispositivo.
 
-Para reconstruir uma versão executável, ainda é necessário criar/restaurar o projeto Flutter com `pubspec.yaml`, dependências e diretórios das plataformas, configurar o Firebase com ferramentas oficiais (gerando `firebase_options.dart`), revisar permissões de notificações e validar a compilação em um ambiente Flutter. **Não publique arquivos privados de configuração, contas de serviço ou credenciais.**
+> O arquivo `lib/main.dart` é a entrada atual. Não execute o `main.dart` histórico na raiz; ele depende do Firebase e de arquivos que não existem mais.
 
-A reorganização do código em múltiplos arquivos, revisão de inicialização e verificação da configuração do Firebase continuam pendentes; este repositório deve ser tratado como uma **amostra de código acadêmico**.
+### Testes
 
-## Estrutura de Dados
-
-### Coleção Users
-```
-users/
-  {userId}/
-    - name: string
-    - email: string
+```powershell
+flutter analyze
+flutter test
+flutter build web
 ```
 
-### Coleção Habits
+O workflow em [GitHub Actions](.github/workflows/flutter.yml) faz verificação equivalente em ambiente Linux com Flutter estável. CI aprovada indica que o código atual passa nos testes e na construção Web; não substitui testes em dispositivos Android reais.
+
+## Organização
+
+```text
+AppHabitos/
+├── lib/
+│   ├── main.dart                   # Aplicação Flutter atual
+│   ├── models/habit.dart           # Recorrência, conclusão por data, JSON
+│   ├── data/habit_repository.dart  # Persistência local e repositório de teste
+│   ├── controllers/habit_controller.dart
+│   └── ui/                         # Telas e editor de hábitos
+├── test/                           # Testes unitários e de widgets
+├── .github/workflows/flutter.yml   # CI Flutter
+├── pubspec.yaml                    # Dependências
+├── main.dart                       # Código legado, preservado para estudo
+├── ic_launcher.png                 # Ícone legado
+├── LICENSE                         # MIT para novo código, conforme NOTICE
+└── NOTICE.md                       # Escopo da licença e direitos antigos
 ```
-habits/
-  {habitId}/
-    - userId: string
-    - title: string
-    - description: string
-    - reminderTime: string
-    - reminderFrequency: string
-    - color: int
-    - weekDays: array<boolean>
-    - weekendDays: array<boolean>
-    - monthDays: array<boolean>
-    - nextReminder: timestamp
-    - isCompleted: boolean
-```
 
-## Aprendizados
+## Segurança, privacidade e limitações
 
-Durante o desenvolvimento deste projeto foram aplicados conhecimentos de:
+A versão nova não possui login nem envia hábitos a um servidor. O conteúdo fica no armazenamento local do aplicativo, sem criptografia específica; **não use para guardar dados sensíveis**. `shared_preferences` é apropriado para uma demonstração simples, mas não é um banco transacional nem garante persistência de informações críticas. A limpeza de dados do navegador ou do aplicativo pode apagar registros. Não há exportação ou migração automática de dados antigos.
 
-- Desenvolvimento mobile multiplataforma com Flutter
-- Integração com Firebase (Authentication e Firestore)
-- Gerenciamento de estado com StatefulWidget
-- Navegação entre telas e passagem de dados
-- Sistema de notificações locais agendadas
-- Manipulação de datas e horários
-- Criação de gráficos e visualizações de dados
-- Organização de código e componentização
-- Interface de usuário responsiva e intuitiva
-- Persistência de dados em tempo real
-- Validação de formulários e tratamento de erros
+Horários preferidos são apenas informativos; programar notificações Android/iOS exige configuração de permissões e implementação adicional. Um dia mensal como 31 só ocorre em meses que têm dia 31. Não há autenticação, sincronização multi-dispositivo, publicação nas lojas ou certificação de segurança.
 
-## Licença
+## Origem e licença
 
-Este projeto foi desenvolvido para fins educacionais como parte de um trabalho acadêmico.
-
-© 2026 Tyago03 e colaboradores. Todos os direitos reservados.
-
-Este software é disponibilizado apenas para fins de demonstração em portfólio.
-
+Reescrita de portfólio de Tyago Vitorino Ferreira com auxílio de ferramentas de IA. Os arquivos atuais são distintos do código acadêmico antigo, que foi preservado para referência. A licença [MIT](LICENSE) é válida para o **código novo da reconstrução**. Leia [NOTICE.md](NOTICE.md): o `main.dart` e o ícone históricos estão excluídos até esclarecer os direitos de eventuais colaboradores. Bibliotecas e marcas de terceiros seguem suas próprias licenças.

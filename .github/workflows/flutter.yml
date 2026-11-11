@@ -1,0 +1,29 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Gerar scaffolding de plataforma ausente
+        run: flutter create --platforms=android,web --project-name=habittrack .
+      - name: Dependências
+        run: flutter pub get
+      - name: Analisar código Dart
+        run: flutter analyze --no-fatal-infos
+      - name: Testes unitários e de interface
+        run: flutter test
+      - name: Compilar Flutter Web
+        run: flutter build web --release
