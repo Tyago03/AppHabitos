@@ -1,0 +1,6 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # As configurações padrão do linter continuam ativas.
+    todo: ignore
