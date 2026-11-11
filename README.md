@@ -1,6 +1,8 @@
 # HabiTrack - Monitorador de Hábitos
 
-Primeiro aplicativo mobile desenvolvido, como projeto acadêmico para gerenciamento e acompanhamento de hábitos diários, semanais e mensais. O projeto foi criado utilizando Flutter e Firebase, com foco em notificações programadas e visualização de estatísticas.
+Primeiro aplicativo mobile desenvolvido como projeto acadêmico para gerenciamento e acompanhamento de hábitos diários, semanais e mensais, utilizando Flutter e Firebase. O foco foi explorar autenticação, persistência, notificações e estatísticas.
+
+> **Estado da publicação:** este repositório compartilha o **código-fonte principal** do protótipo, não a estrutura Flutter completa. Estão publicados `main.dart`, `ic_launcher.png` e este README, mas **faltam** `pubspec.yaml`, arquivos de plataformas e `firebase_options.dart`. Portanto, o projeto **não pode ser executado diretamente após `git clone`**. Os recursos listados abaixo descrevem a implementação acadêmica; não constituem uma versão compilada e validada deste repositório.
 
 ## Sobre o Projeto
 
@@ -9,7 +11,7 @@ O HabiTrack é um aplicativo de rastreamento de hábitos que permite aos usuári
 ## Funcionalidades
 
 ### Gerenciamento de Usuários
-- Sistema de autenticação completo com Firebase Authentication
+- Fluxos de autenticação com Firebase Authentication
 - Cadastro de novos usuários com validação de dados
 - Login seguro com email e senha
 - Recuperação de senha via email
@@ -104,33 +106,20 @@ Antes de executar o aplicativo, é necessário:
 5. Criar banco de dados Firestore
 6. Configurar as regras de segurança do Firestore
 
-## Como Executar
+## Como explorar ou reconstruir o protótipo
 
-1. Clone este repositório:
+Para consultar o código publicado:
 
 ```bash
 git clone https://github.com/Tyago03/AppHabitos.git
-```
-
-2. Acesse a pasta do projeto:
-
-```bash
 cd AppHabitos
 ```
 
-3. Instale as dependências:
+O arquivo `main.dart` reúne as telas e a lógica do exercício. **Ainda não há um projeto Flutter completo para usar `flutter pub get` ou `flutter run` diretamente nesta pasta.**
 
-```bash
-flutter pub get
-```
+Para reconstruir uma versão executável, ainda é necessário criar/restaurar o projeto Flutter com `pubspec.yaml`, dependências e diretórios das plataformas, configurar o Firebase com ferramentas oficiais (gerando `firebase_options.dart`), revisar permissões de notificações e validar a compilação em um ambiente Flutter. **Não publique arquivos privados de configuração, contas de serviço ou credenciais.**
 
-4. Configure o Firebase seguindo as instruções da seção anterior
-
-5. Execute o aplicativo:
-
-```bash
-flutter run
-```
+A reorganização do código em múltiplos arquivos, revisão de inicialização e verificação da configuração do Firebase continuam pendentes; este repositório deve ser tratado como uma **amostra de código acadêmico**.
 
 ## Estrutura de Dados
 
