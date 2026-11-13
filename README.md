@@ -23,7 +23,8 @@ O modo de demonstração pode ser compilado separadamente com `flutter build web
 
 | Recurso | Estado |
 | --- | --- |
-| Criar, editar e excluir hábitos | Implementado |\n| Agenda semanal navegável, seleção de data e calendário | Implementado |
+| Criar, editar e excluir hábitos | Implementado |
+| Agenda semanal navegável, seleção de data e calendário | Implementado |
 | Frequência diária, semanal ou mensal | Implementado |
 | Marcar uma ocorrência como concluída por data | Implementado |
 | Visualizar hábitos da data selecionada | Implementado |
@@ -73,7 +74,7 @@ AppHabitos/
 │   ├── models/habit.dart           # Recorrência, conclusão por data, JSON
 │   ├── data/habit_repository.dart  # Persistência local e repositório de teste
 │   ├── controllers/habit_controller.dart
-│   └── ui/                         # Tema, agenda, cartões e editor de hábitos
+│   └── ui/                         # Tema, tela de agenda, editor e componentes
 ├── test/                           # Testes unitários e de widgets
 ├── .github/workflows/flutter.yml   # CI Flutter
 ├── pubspec.yaml                    # Dependências
