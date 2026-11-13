@@ -11,6 +11,10 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('HabiTrack'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Nenhum hábito para esta data'),
+      160,
+    );
     expect(find.text('Nenhum hábito para esta data'), findsOneWidget);
   });
 
@@ -38,6 +42,10 @@ void main() {
     await tester.pumpWidget(HabitTrackApp(repository: repository));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('habit-check-toggle')),
+      160,
+    );
     await tester.tap(find.byKey(const Key('habit-check-toggle')));
     await tester.pumpAndSettle();
     expect((await repository.load()).single.completedOn(DateTime.now()), isTrue);
@@ -50,6 +58,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(find.text('Beber água'), 160);
     expect(find.text('Beber água'), findsOneWidget);
     await tester.tap(find.text('Resumo'));
     await tester.pumpAndSettle();
@@ -74,6 +83,7 @@ void main() {
     await tester.tap(save);
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(find.text('Estudar Python'), 160);
     expect(find.text('Estudar Python'), findsOneWidget);
   });
 }
