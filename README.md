@@ -2,15 +2,15 @@
 
 [![Flutter CI](https://github.com/Tyago03/AppHabitos/actions/workflows/flutter.yml/badge.svg)](https://github.com/Tyago03/AppHabitos/actions/workflows/flutter.yml)
 
-**Reconstrução de um projeto acadêmico antigo em Flutter.**
+**Agenda de hábitos acolhedora, com calendário semanal e acompanhamento offline.**
 
 O projeto original foi desenvolvido com Flutter/Firebase para gerenciar hábitos e notificações. Os arquivos originais de plataforma e configuração foram perdidos; apenas o `main.dart` antigo e um ícone sobreviveram. Em novembro de 2026, a aplicação foi **reescrita com assistência de IA**, mantendo o código histórico como referência.
 
 > **Estado:** nova implementação de portfólio com funcionamento **offline e armazenamento local**, sem Firebase ou cadastro. Esta reconstrução **não recupera dados de contas antigas** nem afirma reproduzir todas as funcionalidades do protótipo original. A nova entrada da aplicação é `lib/main.dart`; o `main.dart` da raiz é histórico.
 
-## Capturas do aplicativo em execução (dados fictícios)
+## Nova identidade visual — agenda clara (dados fictícios)
 
-As imagens são capturadas pelo navegador Chrome com **Flutter Web realmente executado**, em um build de demonstração que carrega apenas dados **sintéticos**. A interface mostra a etiqueta `DEMO`. Não é uma captura de contas reais nem uma validação Android.
+As imagens são capturadas pelo navegador Chrome com **Flutter Web realmente executado**, em um build de demonstração que carrega apenas dados **sintéticos**. A interface mostra a etiqueta `DEMO`. O visual utiliza papel claro, terracota e verde-sálvia, com navegação semanal e cartões de hábitos simples. As capturas são regeneradas pelo GitHub Actions após mudanças no Flutter. Não são capturas de contas reais nem validação Android.
 
 <p>
   <img src="docs/preview-hoje.png" width="310" alt="HabiTrack, tela Hoje com hábitos fictícios" />
@@ -23,7 +23,7 @@ O modo de demonstração pode ser compilado separadamente com `flutter build web
 
 | Recurso | Estado |
 | --- | --- |
-| Criar, editar e excluir hábitos | Implementado |
+| Criar, editar e excluir hábitos | Implementado |\n| Agenda semanal navegável, seleção de data e calendário | Implementado |
 | Frequência diária, semanal ou mensal | Implementado |
 | Marcar uma ocorrência como concluída por data | Implementado |
 | Visualizar hábitos da data selecionada | Implementado |
@@ -73,7 +73,7 @@ AppHabitos/
 │   ├── models/habit.dart           # Recorrência, conclusão por data, JSON
 │   ├── data/habit_repository.dart  # Persistência local e repositório de teste
 │   ├── controllers/habit_controller.dart
-│   └── ui/                         # Telas e editor de hábitos
+│   └── ui/                         # Tema, agenda, cartões e editor de hábitos
 ├── test/                           # Testes unitários e de widgets
 ├── .github/workflows/flutter.yml   # CI Flutter
 ├── pubspec.yaml                    # Dependências

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/habit.dart';
+import 'app_theme.dart';
 
 class HabitEditor extends StatefulWidget {
   const HabitEditor({super.key, this.existing});
@@ -91,21 +92,32 @@ class _HabitEditorState extends State<HabitEditor> {
   Widget build(BuildContext context) {
     final isEditing = widget.existing != null;
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: FractionallySizedBox(
-        heightFactor: 0.88,
+        heightFactor: 0.91,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                isEditing ? 'Editar hábito' : 'Criar hábito',
-                style: Theme.of(context).textTheme.headlineSmall,
+              const Icon(
+                Icons.local_florist_outlined,
+                size: 36,
+                color: HabitPalette.sage,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 11),
+              Text(
+                isEditing ? 'Ajustar hábito' : 'Um novo começo',
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Organize sua rotina do seu jeito.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: HabitPalette.muted),
+              ),
+              const SizedBox(height: 25),
               TextField(
                 key: const Key('habit-title'),
                 controller: _titleController,
@@ -113,49 +125,52 @@ class _HabitEditorState extends State<HabitEditor> {
                 textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
                   labelText: 'Nome do hábito',
-                  hintText: 'Ex.: Estudar inglês',
-                  border: OutlineInputBorder(),
+                  hintText: 'Ex.: Caminhar por 20 minutos',
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               TextField(
                 controller: _notesController,
                 maxLines: 2,
                 maxLength: 240,
                 decoration: const InputDecoration(
-                  labelText: 'Descrição (opcional)',
-                  border: OutlineInputBorder(),
+                  labelText: 'Uma observação (opcional)',
+                  hintText: 'Ex.: Depois do café',
                 ),
               ),
-              const SizedBox(height: 12),
-              Text('Frequência', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 13),
+              Text('Quando repetir?', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
               Wrap(
-                spacing: 8,
+                spacing: 9,
+                runSpacing: 5,
                 children: [
                   for (final option in HabitFrequency.values)
                     ChoiceChip(
                       label: Text(switch (option) {
-                        HabitFrequency.daily => 'Diário',
+                        HabitFrequency.daily => 'Todo dia',
                         HabitFrequency.weekly => 'Semanal',
                         HabitFrequency.monthly => 'Mensal',
                       }),
                       selected: _frequency == option,
+                      selectedColor: HabitPalette.peach,
                       onSelected: (_) => setState(() => _frequency = option),
                     ),
                 ],
               ),
               if (_frequency == HabitFrequency.weekly) ...[
-                const SizedBox(height: 18),
+                const SizedBox(height: 22),
                 Text('Dias da semana', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
+                const SizedBox(height: 9),
                 Wrap(
-                  spacing: 7,
+                  spacing: 6,
+                  runSpacing: 3,
                   children: [
                     for (var index = 0; index < dayLabels.length; index++)
                       FilterChip(
                         label: Text(dayLabels[index]),
                         selected: _weekdays.contains(index + 1),
+                        selectedColor: HabitPalette.sageWash,
                         onSelected: (selected) => setState(() {
                           if (selected) {
                             _weekdays.add(index + 1);
@@ -170,6 +185,7 @@ class _HabitEditorState extends State<HabitEditor> {
               if (_frequency == HabitFrequency.monthly) ...[
                 const SizedBox(height: 18),
                 Text('Dia do mês', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
                 DropdownButton<int>(
                   value: _monthDay,
                   isExpanded: true,
@@ -182,32 +198,36 @@ class _HabitEditorState extends State<HabitEditor> {
                   },
                 ),
                 const Text(
-                  'Se o mês não tiver esse dia, não haverá ocorrência naquele mês.',
+                  'Nos meses sem esse dia, não haverá ocorrência.',
+                  style: TextStyle(color: HabitPalette.muted, fontSize: 12),
                 ),
               ],
-              const SizedBox(height: 10),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _hasReminder,
-                onChanged: (value) => setState(() => _hasReminder = value),
-                title: const Text('Guardar horário preferido'),
-                subtitle: const Text(
-                  'Ainda não dispara notificações automáticas.',
+              const SizedBox(height: 20),
+              Card(
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 3),
+                  value: _hasReminder,
+                  onChanged: (value) => setState(() => _hasReminder = value),
+                  title: const Text('Guardar horário preferido'),
+                  subtitle: const Text(
+                    'Apenas informativo; ainda não envia notificações.',
+                  ),
                 ),
               ),
-              if (_hasReminder)
+              if (_hasReminder) ...[
+                const SizedBox(height: 10),
                 OutlinedButton.icon(
                   onPressed: _pickReminder,
                   icon: const Icon(Icons.schedule),
                   label: Text('Horário: ${_reminder.format(context)}'),
                 ),
-              const SizedBox(height: 22),
+              ],
+              const SizedBox(height: 25),
               FilledButton.icon(
                 onPressed: _submit,
                 icon: const Icon(Icons.check),
                 label: Text(isEditing ? 'Salvar alterações' : 'Salvar hábito'),
               ),
-              const SizedBox(height: 14),
             ],
           ),
         ),
