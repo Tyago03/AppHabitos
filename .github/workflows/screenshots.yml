@@ -50,7 +50,10 @@ jobs:
           git add docs/preview-hoje.png docs/preview-resumo.png
           if ! git diff --cached --quiet; then
             git commit -m 'docs: prints reais Flutter em modo demonstração'
-            git push
+            # Rebase necessário quando outras alterações chegam à main durante o build.
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
       - uses: actions/upload-artifact@v4
         with:
